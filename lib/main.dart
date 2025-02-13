@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'screens/enrollment_screen.dart';
+import 'screens/enrollment/enrollment_screen.dart';
 
 void main() {
   runApp(const EMSApp());
