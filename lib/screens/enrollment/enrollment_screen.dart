@@ -61,16 +61,17 @@ class _EnrollmentScreenState extends State<EnrollmentScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Student Portal'),
-        actions: [
-          if (_controller != null) // Only show refresh button when controller is initialized
-            IconButton(
-              icon: const Icon(Icons.refresh),
-              onPressed: () => _controller?.reload(),
-            ),
-        ],
-      ),
+      // appBar: 
+      // AppBar(
+      //   title: const Text('Student Portal'),
+      //   actions: [
+      //     if (_controller != null) // Only show refresh button when controller is initialized
+      //       IconButton(
+      //         icon: const Icon(Icons.refresh),
+      //         onPressed: () => _controller?.reload(),
+      //       ),
+      //   ],
+      // ),
       body: _controller == null
           ? const Center(child: CircularProgressIndicator())
           : WebViewContainer(
