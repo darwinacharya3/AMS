@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'screens/enrollment/enrollment_screen.dart';
 
 void main() {
@@ -10,7 +11,7 @@ class EMSApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return GetMaterialApp(
       title: 'EMS Enrollment',
       theme: ThemeData(
         primarySwatch: Colors.blue,
