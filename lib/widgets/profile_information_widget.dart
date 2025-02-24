@@ -21,6 +21,7 @@ class ProfileInformationWidget extends StatelessWidget {
           _buildTimeSlotInfo(),
           _buildActionButtons(),
           _buildPersonalInformation(),
+          
         ],
       ),
     );
@@ -49,7 +50,17 @@ class ProfileInformationWidget extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
+
+                Text(
+                  userDetail.etId,
+                   style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    
+                  ),
+                ),
+                
               ],
+              
             ),
           ),
         ],
@@ -143,14 +154,14 @@ class ProfileInformationWidget extends StatelessWidget {
               onPressed: () {
                 // Edit functionality to be implemented
               },
-              icon: const Icon(Icons.edit),
+              icon: const Icon(Icons.edit,color:  Color.fromARGB(255, 227, 10, 169),),
               label: Text(
                 'Edit',
-                style: GoogleFonts.poppins(),
+                style: GoogleFonts.poppins(color: const Color.fromARGB(255, 227, 10, 169),),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color.fromARGB(255, 227, 10, 169),
-                foregroundColor: Colors.white,
+                backgroundColor: Colors.white,
+                side: const BorderSide(color:  Color.fromARGB(255, 227, 10, 169),),
                 padding: const EdgeInsets.symmetric(vertical: 12),
               ),
             ),
@@ -259,3 +270,6 @@ class ProfileInformationWidget extends StatelessWidget {
     );
   }
 }
+
+
+

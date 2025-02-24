@@ -22,6 +22,12 @@ class UserDetail {
   final String currentStateId;
   final String timeSlot;
   final String batchOtherName;
+  final String isAusPermanentResident;
+  final String countryOfLiving;
+  final String eContactName;
+  final String relation;
+  final String eContactNo;
+  
 
   UserDetail({
     required this.name,
@@ -46,6 +52,11 @@ class UserDetail {
     required this.currentStateId,
     required this.timeSlot,
     required this.batchOtherName,
+    required this.isAusPermanentResident,
+    required this.countryOfLiving,
+    required this.eContactName,
+    required this.relation,
+    required this.eContactNo,
   });
 
   factory UserDetail.fromJson(Map<String, dynamic> json) {
@@ -75,9 +86,20 @@ class UserDetail {
       currentStateId: userData['current_state_id']?.toString() ?? '',
       timeSlot: userData['time_slot_id']?.toString() ?? '',
       batchOtherName: userData['batch_other_name']?.toString() ?? '',
+      isAusPermanentResident: userData['is_aus_permanent_resident']?.toString() ?? '',
+      countryOfLiving: userData['country_of_living']?.toString() ?? '',
+      eContactName: userData['e_contact_name']?.toString() ?? '',
+      relation: userData['relation']?.toString() ?? '',
+      eContactNo: userData['e_contact_no']?.toString() ?? '',
     );
   }
 }
+
+
+
+
+
+
 
 
 
