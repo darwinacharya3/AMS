@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:ems/widgets/custom_app_bar.dart';
 import 'package:ems/widgets/dashboard_drawer.dart';
 import 'package:ems/widgets/custom_navigation.dart';
-import 'package:ems/services/secure_storage_service.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:ems/models/user_detail.dart';
-
-
+import 'package:ems/services/secure_storage_service.dart';
+import 'package:ems/widgets/profile_information_widget.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -107,75 +106,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  Widget _buildInfoCard() {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      margin: const EdgeInsets.all(16),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildInfoRow('Student ID', _userDetail?.etId ?? 'N/A'),
-            const Divider(height: 24),
-            _buildInfoRow('Name', _userDetail?.name ?? 'N/A'),
-            const Divider(height: 24),
-            _buildInfoRow('Email', _userDetail?.email ?? 'N/A'),
-            const Divider(height: 24),
-            _buildInfoRow('Phone', _userDetail?.mobileNo ?? 'N/A'),
-            const Divider(height: 24),
-            _buildInfoRow('Address', _userDetail?.residentialAddress ?? 'N/A'),
-            const Divider(height: 24),
-            _buildInfoRow('Course', _userDetail?.courseName ?? 'N/A'),
-            const Divider(height: 24),
-            _buildInfoRow('Batch', _userDetail?.batchName ?? 'N/A'),
-            const Divider(height: 24),
-            _buildInfoRow('Visa Type', _userDetail?.visaType ?? 'N/A'),
-            const Divider(height: 24),
-            _buildInfoRow('DOB', _userDetail?.dob ?? 'N/A'),
-            const Divider(height: 24),
-            _buildInfoRow('Passport', _userDetail?.passportNumber ?? 'N/A'),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(String label, String value) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: 100,
-          child: Text(
-            label,
-            style: GoogleFonts.poppins(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-              color: Colors.black87,
-            ),
-          ),
-        ),
-        Expanded(
-          child: Text(
-            value,
-            style: GoogleFonts.poppins(
-              fontSize: 16,
-              color: Colors.black87,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 
   Widget _buildContent() {
     if (_isLoading) {
       return const Center(
-        child: CircularProgressIndicator(),
+        child: CircularProgressIndicator(
+          color: Color.fromARGB(255, 227, 10, 169),
+        ),
       );
     }
 
@@ -211,8 +148,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ElevatedButton.icon(
                 onPressed: _loadUserDetails,
                 icon: const Icon(Icons.refresh),
-                label: const Text('Retry'),
+                label: Text(
+                  'Retry',
+                  style: GoogleFonts.poppins(),
+                ),
                 style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color.fromARGB(255, 227, 10, 169),
+                  foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 ),
               ),
@@ -222,24 +164,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       );
     }
 
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text(
-              'Welcome, ${_userDetail?.name ?? "User"}',
-              style: GoogleFonts.poppins(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-          ),
-          _buildInfoCard(),
-        ],
-      ),
+    return ProfileInformationWidget(
+      userDetail: _userDetail!,
     );
   }
 
@@ -248,16 +174,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
+        backgroundColor: Colors.grey[50],
         appBar: CustomAppBar(
           title: _selectedItem,
           icon: Icons.person,
           showBackButton: false,
+          ),
+          endDrawer: DashboardDrawer(
+            selectedItem: _selectedItem, 
+            onItemSelected: _onItemSelected,),
+
+        body: SafeArea(
+          child: _buildContent(),
         ),
-        endDrawer: DashboardDrawer(
-          selectedItem: _selectedItem,
-          onItemSelected: _onItemSelected,
-        ),
-        body: _buildContent(),
       ),
     );
   }
@@ -268,6 +197,292 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
 
 
+
+
+
+
+
+
+
+// import 'package:flutter/material.dart';
+// import 'package:google_fonts/google_fonts.dart';
+// import 'package:ems/services/secure_storage_service.dart';
+// import 'package:http/http.dart' as http;
+// import 'dart:convert';
+// import 'package:ems/models/user_detail.dart';
+// import 'package:ems/widgets/profile_information_widget.dart';
+
+// class DashboardScreen extends StatefulWidget {
+//   const DashboardScreen({super.key});
+
+//   @override
+//   State<DashboardScreen> createState() => _DashboardScreenState();
+// }
+
+// class _DashboardScreenState extends State<DashboardScreen> {
+//   UserDetail? _userDetail;
+//   bool _isLoading = true;
+//   String? _error;
+  
+//   @override
+//   void initState() {
+//     super.initState();
+//     _loadUserDetails();
+//   }
+
+//   Future<void> _loadUserDetails() async {
+//     try {
+//       setState(() {
+//         _isLoading = true;
+//         _error = null;
+//       });
+
+//       final email = await SecureStorageService.getUserEmail();
+//       if (email != null) {
+//         final url = 'https://extratech.extratechweb.com/api/student/detail/$email';
+//         final response = await http.get(
+//           Uri.parse(url),
+//           headers: {
+//             'Content-Type': 'application/json',
+//             'Accept': 'application/json',
+//           },
+//         );
+
+//         if (response.statusCode == 200) {
+//           final Map<String, dynamic> data = json.decode(response.body);
+//           if (mounted) {
+//             setState(() {
+//               _userDetail = UserDetail.fromJson(data);
+//               _isLoading = false;
+//             });
+//           }
+//         } else {
+//           throw Exception('Failed to load user details');
+//         }
+//       } else {
+//         throw Exception('No stored email found');
+//       }
+//     } catch (e) {
+//       if (mounted) {
+//         setState(() {
+//           _error = e.toString();
+//           _isLoading = false;
+//         });
+//       }
+//     }
+//   }
+
+//   Widget _buildProfileHeader() {
+//     return Container(
+//       padding: const EdgeInsets.all(20),
+//       child: Column(
+//         children: [
+//           // Profile image and name
+//           Row(
+//             children: [
+//               CircleAvatar(
+//                 radius: 30,
+//                 backgroundImage: NetworkImage(
+//                   'https://extratech.extratechweb.com/${_userDetail?.image ?? ""}',
+//                 ),
+//               ),
+//               const SizedBox(width: 15),
+//               Expanded(
+//                 child: Column(
+//                   crossAxisAlignment: CrossAxisAlignment.start,
+//                   children: [
+//                     Text(
+//                       _userDetail?.name ?? '',
+//                       style: GoogleFonts.poppins(
+//                         fontSize: 24,
+//                         fontWeight: FontWeight.bold,
+//                       ),
+//                     ),
+//                     Text(
+//                       _userDetail?.batchName ?? '',
+//                       style: GoogleFonts.poppins(
+//                         fontSize: 14,
+//                         color: Colors.grey,
+//                       ),
+//                     ),
+//                     Text(
+//                       '${_userDetail?.commencementDate ?? ""} ${_userDetail?.timeSlot ?? ""}',
+//                       style: GoogleFonts.poppins(
+//                         fontSize: 14,
+//                         color: Colors.grey,
+//                       ),
+//                     ),
+//                   ],
+//                 ),
+//               ),
+//             ],
+//           ),
+//           const SizedBox(height: 20),
+//           // Course Materials button removed as requested
+//           const SizedBox(height: 20),
+//           // Download and Edit buttons
+//           Row(
+//             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+//             children: [
+//               ElevatedButton.icon(
+//                 onPressed: () {},
+//                 icon: const Icon(Icons.download, color: Colors.pink),
+//                 label: Text(
+//                   'Download Profile',
+//                   style: GoogleFonts.poppins(color: Colors.pink),
+//                 ),
+//                 style: ElevatedButton.styleFrom(
+//                   backgroundColor: Colors.white,
+//                   side: const BorderSide(color: Colors.pink),
+//                 ),
+//               ),
+//               ElevatedButton.icon(
+//                 onPressed: () {},
+//                 icon: const Icon(Icons.edit, color: Colors.pink),
+//                 label: Text(
+//                   'Edit',
+//                   style: GoogleFonts.poppins(color: Colors.pink),
+//                 ),
+//                 style: ElevatedButton.styleFrom(
+//                   backgroundColor: Colors.white,
+//                   side: const BorderSide(color: Colors.pink),
+//                 ),
+//               ),
+//             ],
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+
+//   Widget _buildInfoSection(String title, Map<String, String> fields) {
+//     return Container(
+//       margin: const EdgeInsets.all(20),
+//       padding: const EdgeInsets.all(20),
+//       decoration: BoxDecoration(
+//         color: Colors.white,
+//         borderRadius: BorderRadius.circular(15),
+//         boxShadow: [
+//           BoxShadow(
+//             color: Colors.grey.withOpacity(0.1),
+//             spreadRadius: 1,
+//             blurRadius: 5,
+//           ),
+//         ],
+//       ),
+//       child: Column(
+//         crossAxisAlignment: CrossAxisAlignment.start,
+//         children: [
+//           Text(
+//             title,
+//             style: GoogleFonts.poppins(
+//               fontSize: 20,
+//               fontWeight: FontWeight.bold,
+//             ),
+//           ),
+//           const SizedBox(height: 20),
+//           ...fields.entries.map((entry) => _buildInfoField(entry.key, entry.value)),
+//         ],
+//       ),
+//     );
+//   }
+
+//   Widget _buildInfoField(String label, String value) {
+//     return Padding(
+//       padding: const EdgeInsets.symmetric(vertical: 8),
+//       child: Column(
+//         crossAxisAlignment: CrossAxisAlignment.start,
+//         children: [
+//           Text(
+//             label,
+//             style: GoogleFonts.poppins(
+//               fontSize: 14,
+//               color: Colors.grey,
+//             ),
+//           ),
+//           const SizedBox(height: 5),
+//           Text(
+//             value,
+//             style: GoogleFonts.poppins(
+//               fontSize: 16,
+//               fontWeight: FontWeight.w500,
+//             ),
+//           ),
+//           const Divider(height: 16),
+//         ],
+//       ),
+//     );
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     if (_isLoading) {
+//       return const Scaffold(
+//         body: Center(child: CircularProgressIndicator()),
+//       );
+//     }
+
+//     if (_error != null) {
+//       return Scaffold(
+//         body: Center(
+//           child: Text('Error: $_error'),
+//         ),
+//       );
+//     }
+
+//     return Scaffold(
+//       backgroundColor: Colors.grey[50],
+//       appBar: AppBar(
+//         title: Row(
+//           children: [
+//             const Icon(Icons.person, color: Colors.pink),
+//             const SizedBox(width: 10),
+//             Text(
+//               'General',
+//               style: GoogleFonts.poppins(
+//                 color: Colors.black,
+//                 fontWeight: FontWeight.w600,
+//               ),
+//             ),
+//           ],
+//         ),
+//         backgroundColor: Colors.white,
+//         elevation: 0,
+//       ),
+//       body: SingleChildScrollView(
+//         child: Column(
+//           children: [
+//             _buildProfileHeader(),
+//             _buildInfoSection(
+//               'Student Personal Information',
+//               {
+//                 'Name': _userDetail?.name ?? '',
+//                 'Gender': _userDetail?.gender == '1' ? 'Male' : 'Female',
+//                 'Phone': _userDetail?.mobileNo ?? '',
+//                 'Email': _userDetail?.email ?? '',
+//                 'Date of Birth': _userDetail?.dob ?? '',
+//                 'Birth Country': 'Nepal', // Map from country_id
+//                 'State': 'Gandaki', // Map from state_id
+//                 'Home Country Address': _userDetail?.birthResidentialAddress ??  '',
+//               },
+//             ),
+//             _buildInfoSection(
+//               'Residential Information',
+//               {
+//                 'Current Address': _userDetail?.residentialAddress ?? '',
+//                 'Post Code': _userDetail?.postCode ?? '',
+//                 'Visa Type': _userDetail?.visaType ?? '',
+//                 'Current State': 'Bagmati', // Map from current_state_id
+//                 'Passport Number': _userDetail?.passportNumber ?? '',
+//                 'Passport Expiry': _userDetail?.passportExpiryDate ?? '',
+//               },
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }
 
 
 
