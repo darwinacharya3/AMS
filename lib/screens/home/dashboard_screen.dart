@@ -11,6 +11,7 @@ import 'package:ems/services/secure_storage_service.dart';
 import 'package:ems/widgets/profile_information_widget.dart';
 import 'package:ems/widgets/resident_information_widget.dart';
 import 'package:ems/widgets/emergency_contact_widget.dart';
+import 'package:ems/widgets/passport_copies_widget.dart';
 
 
 class DashboardScreen extends StatefulWidget {
@@ -227,6 +228,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
            EmergencyContactWidget(
           userDetail: _userDetail!,
         ),
+        PassportCopiesWidget(),
         ],
       ),
     );
