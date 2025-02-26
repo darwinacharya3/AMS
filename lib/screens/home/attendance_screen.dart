@@ -1,61 +1,35 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-
+import 'package:ems/controller/attendance_controller.dart';
 import 'package:ems/screens/home/dashboard_screen.dart';
 import 'package:ems/widgets/dashboard_drawer.dart';
 import 'package:ems/widgets/custom_app_bar.dart';
 import 'package:ems/widgets/custom_navigation.dart';
 
-class AttendanceScreen extends StatefulWidget {
+class AttendanceScreen extends ConsumerWidget {
   const AttendanceScreen({Key? key}) : super(key: key);
 
-  @override
-  State<AttendanceScreen> createState() => _AttendanceScreenState();
-}
-
-class _AttendanceScreenState extends State<AttendanceScreen> {
-  late final WebViewController _webViewController;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _webViewController = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setNavigationDelegate(
-        NavigationDelegate(
-          onPageFinished: (String url) async {
-            // Hide the navigation bar if it exists
-            await _webViewController.runJavaScript(
-              "document.querySelector('nav')?.style.display = 'none';"
-            );
-
-            // Click the "Attendance" tab by ID (change if necessary)
-            await _webViewController.runJavaScript(
-              "document.getElementById('nav-profile-tab')?.click();"
-            );
-          },
-        ),
-      )
-      ..loadRequest(Uri.parse('https://extratech.extratechweb.com/student'));
-  }
-
   // Handle back button behavior
-  Future<bool> _onWillPop() async {
-    if (await _webViewController.canGoBack()) {
-      _webViewController.goBack();
+  Future<bool> _onWillPop(BuildContext context, AttendanceController controller) async {
+    if (await controller.canGoBack()) {
+      controller.goBack();
       return false;
     } else {
-      Get.to(() => const DashboardScreen());
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const DashboardScreen()),
+      );
       return false;
     }
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final controller = ref.watch(attendanceControllerProvider.notifier);
+    final webViewController = ref.watch(attendanceControllerProvider);
+
     return WillPopScope(
-      onWillPop: _onWillPop,
+      onWillPop: () => _onWillPop(context, controller),
       child: Scaffold(
         appBar: const CustomAppBar(
           title: 'Attendance',
@@ -65,14 +39,100 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
         endDrawer: DashboardDrawer(
           selectedItem: 'Attendance',
           onItemSelected: (String item) {
-            CustomNavigation.navigateToScreen(item, context);
+            CustomNavigation.navigateToScreen(item, context,);
           },
         ),
-        body: WebViewWidget(controller: _webViewController),
+        body: WebViewWidget(controller: webViewController),
       ),
     );
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+// import 'package:flutter/material.dart';
+// import 'package:get/get.dart';
+// import 'package:webview_flutter/webview_flutter.dart';
+
+// import 'package:ems/screens/home/dashboard_screen.dart';
+// import 'package:ems/widgets/dashboard_drawer.dart';
+// import 'package:ems/widgets/custom_app_bar.dart';
+// import 'package:ems/widgets/custom_navigation.dart';
+
+// class AttendanceScreen extends StatefulWidget {
+//   const AttendanceScreen({Key? key}) : super(key: key);
+
+//   @override
+//   State<AttendanceScreen> createState() => _AttendanceScreenState();
+// }
+
+// class _AttendanceScreenState extends State<AttendanceScreen> {
+//   late final WebViewController _webViewController;
+
+//   @override
+//   void initState() {
+//     super.initState();
+
+//     _webViewController = WebViewController()
+//       ..setJavaScriptMode(JavaScriptMode.unrestricted)
+//       ..setNavigationDelegate(
+//         NavigationDelegate(
+//           onPageFinished: (String url) async {
+//             // Hide the navigation bar if it exists
+//             await _webViewController.runJavaScript(
+//               "document.querySelector('nav')?.style.display = 'none';"
+//             );
+
+//             // Click the "Attendance" tab by ID (change if necessary)
+//             await _webViewController.runJavaScript(
+//               "document.getElementById('nav-profile-tab')?.click();"
+//             );
+//           },
+//         ),
+//       )
+//       ..loadRequest(Uri.parse('https://extratech.extratechweb.com/student'));
+//   }
+
+//   // Handle back button behavior
+//   Future<bool> _onWillPop() async {
+//     if (await _webViewController.canGoBack()) {
+//       _webViewController.goBack();
+//       return false;
+//     } else {
+//       Get.to(() => const DashboardScreen());
+//       return false;
+//     }
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return WillPopScope(
+//       onWillPop: _onWillPop,
+//       child: Scaffold(
+//         appBar: const CustomAppBar(
+//           title: 'Attendance',
+//           icon: Icons.calendar_today,
+//           showBackButton: true,
+//         ),
+//         endDrawer: DashboardDrawer(
+//           selectedItem: 'Attendance',
+//           onItemSelected: (String item) {
+//             CustomNavigation.navigateToScreen(item, context);
+//           },
+//         ),
+//         body: WebViewWidget(controller: _webViewController),
+//       ),
+//     );
+//   }
+// }
 
 
 

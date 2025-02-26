@@ -27,58 +27,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
   UserDetail? _userDetail;
   bool _isLoading = true;
   String? _error;
-   List<Country> _countries = [];
+  List<Country> _countries = [];
   List<StateModel> _states = [];
   
-
   @override
   void initState() {
     super.initState();
-    _loadUserDetails();
-    _loadCountriesAndStates();
+    _loadData();
   }
 
-  Future<void> _loadCountriesAndStates() async {
-      final email = await SecureStorageService.getUserEmail();
-      debugPrint('Retrieved email from storage: $email');
-    try {
-      final url = 'https://extratech.extratechweb.com/api/student/detail/$email';
-      final response = await http.get(
-        Uri.parse(url),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> data = json.decode(response.body);
-        
-        if (mounted) {
-          setState(() {
-            _countries = (data['countries'] as List)
-                .map((country) => Country.fromJson(country))
-                .toList();
-                
-            _states = (data['states'] as List)
-                .map((state) => StateModel.fromJson(state))
-                .toList();
-          });
-        }
-      } else {
-        throw Exception('Failed to load countries and states');
-      }
-    } catch (e) {
-      debugPrint('Error loading countries and states: $e');
-      if (mounted) {
-        setState(() {
-          _error = 'Failed to load location data: $e';
-        });
-      }
-    }
-  }
-
-  Future<void> _loadUserDetails() async {
+  Future<void> _loadData() async {
     try {
       setState(() {
         _isLoading = true;
@@ -88,40 +46,49 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final email = await SecureStorageService.getUserEmail();
       debugPrint('Retrieved email from storage: $email');
 
-      if (email != null) {
-        
-        final url = 'https://extratech.extratechweb.com/api/student/detail/$email';
-        debugPrint('Making API request to: $url');
-
-        final response = await http.get(
-          Uri.parse(url),
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-        );
-
-        debugPrint('API Response Status Code: ${response.statusCode}');
-
-        if (response.statusCode == 200) {
-          final Map<String, dynamic> data = json.decode(response.body);
-          if (mounted) {
-            setState(() {
-              _userDetail = UserDetail.fromJson(data);
-              _isLoading = false;
-            });
-          }
-        } else {
-          throw Exception('Failed to load user details: ${response.statusCode}');
-        }
-      } else {
+      if (email == null) {
         throw Exception('No stored email found');
       }
+      
+      final url = 'https://extratech.extratechweb.com/api/student/detail/$email';
+      debugPrint('Making API request to: $url');
+
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      );
+
+      debugPrint('API Response Status Code: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        if (mounted) {
+          setState(() {
+            _userDetail = UserDetail.fromJson(data);
+            
+            _countries = (data['countries'] as List?)
+                ?.map((country) => Country.fromJson(country))
+                .toList() ?? [];
+                
+            _states = (data['states'] as List?)
+                ?.map((state) => StateModel.fromJson(state))
+                .toList() ?? [];
+                
+            _isLoading = false;
+          });
+        }
+      } else {
+        throw Exception('Failed to load user details: ${response.statusCode}');
+      }
     } catch (e) {
-      debugPrint('Error in _loadUserDetails: $e');
+      debugPrint('Error in _loadData: $e');
       if (mounted) {
         setState(() {
-          _error = e.toString();
+          // More user-friendly error message
+          _error = 'Unable to load your information. Please try again later.';
           _isLoading = false;
         });
       }
@@ -156,7 +123,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-
   Widget _buildContent() {
     if (_isLoading) {
       return const Center(
@@ -180,7 +146,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                'Error loading data:',
+                'Something went wrong',
                 style: GoogleFonts.poppins(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -196,7 +162,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               const SizedBox(height: 16),
               ElevatedButton.icon(
-                onPressed: _loadUserDetails,
+                onPressed: _loadData,
                 icon: const Icon(Icons.refresh),
                 label: Text(
                   'Retry',
@@ -214,6 +180,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
       );
     }
 
+    // Make sure user details are available before rendering widgets
+    if (_userDetail == null) {
+      return Center(
+        child: Text(
+          'No user information available.',
+          style: GoogleFonts.poppins(
+            fontSize: 16,
+          ),
+        ),
+      );
+    }
+
     return SingleChildScrollView(
       child: Column(
         children: [
@@ -225,10 +203,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
             countries: _countries,
             states: _states,
           ),
-           EmergencyContactWidget(
-          userDetail: _userDetail!,
-        ),
-        PassportCopiesWidget(),
+          EmergencyContactWidget(
+            userDetail: _userDetail!,
+          ),
+          const PassportCopiesWidget(),
         ],
       ),
     );
@@ -244,11 +222,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
           title: _selectedItem,
           icon: Icons.person,
           showBackButton: false,
-          ),
-          endDrawer: DashboardDrawer(
-            selectedItem: _selectedItem, 
-            onItemSelected: _onItemSelected,),
-
+        ),
+        endDrawer: DashboardDrawer(
+          selectedItem: _selectedItem, 
+          onItemSelected: _onItemSelected,
+        ),
         body: SafeArea(
           child: _buildContent(),
         ),
@@ -256,6 +234,282 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// import 'package:flutter/material.dart';
+// import 'package:google_fonts/google_fonts.dart';
+// import 'package:http/http.dart' as http;
+// import 'dart:convert';
+// import 'package:ems/widgets/custom_app_bar.dart';
+// import 'package:ems/widgets/dashboard_drawer.dart';
+// import 'package:ems/widgets/custom_navigation.dart';
+// import 'package:ems/models/user_detail.dart';
+// import 'package:ems/models/location_model.dart';
+// import 'package:ems/services/secure_storage_service.dart';
+// import 'package:ems/widgets/profile_information_widget.dart';
+// import 'package:ems/widgets/resident_information_widget.dart';
+// import 'package:ems/widgets/emergency_contact_widget.dart';
+// import 'package:ems/widgets/passport_copies_widget.dart';
+
+
+// class DashboardScreen extends StatefulWidget {
+//   const DashboardScreen({super.key});
+
+//   @override
+//   State<DashboardScreen> createState() => _DashboardScreenState();
+// }
+
+// class _DashboardScreenState extends State<DashboardScreen> {
+//   String _selectedItem = 'General';
+//   DateTime? _lastBackPressed;
+//   UserDetail? _userDetail;
+//   bool _isLoading = true;
+//   String? _error;
+//    List<Country> _countries = [];
+//   List<StateModel> _states = [];
+  
+
+//   @override
+//   void initState() {
+//     super.initState();
+//     _loadUserDetails();
+//     _loadCountriesAndStates();
+//   }
+
+//   Future<void> _loadCountriesAndStates() async {
+//       final email = await SecureStorageService.getUserEmail();
+//       debugPrint('Retrieved email from storage: $email');
+//     try {
+//       final url = 'https://extratech.extratechweb.com/api/student/detail/$email';
+//       final response = await http.get(
+//         Uri.parse(url),
+//         headers: {
+//           'Content-Type': 'application/json',
+//           'Accept': 'application/json',
+//         },
+//       );
+
+//       if (response.statusCode == 200) {
+//         final Map<String, dynamic> data = json.decode(response.body);
+        
+//         if (mounted) {
+//           setState(() {
+//             _countries = (data['countries'] as List)
+//                 .map((country) => Country.fromJson(country))
+//                 .toList();
+                
+//             _states = (data['states'] as List)
+//                 .map((state) => StateModel.fromJson(state))
+//                 .toList();
+//           });
+//         }
+//       } else {
+//         throw Exception('Failed to load countries and states');
+//       }
+//     } catch (e) {
+//       debugPrint('Error loading countries and states: $e');
+//       if (mounted) {
+//         setState(() {
+//           _error = 'Failed to load location data: $e';
+//         });
+//       }
+//     }
+//   }
+
+//   Future<void> _loadUserDetails() async {
+//     try {
+//       setState(() {
+//         _isLoading = true;
+//         _error = null;
+//       });
+
+//       final email = await SecureStorageService.getUserEmail();
+//       debugPrint('Retrieved email from storage: $email');
+
+//       if (email != null) {
+        
+//         final url = 'https://extratech.extratechweb.com/api/student/detail/$email';
+//         debugPrint('Making API request to: $url');
+
+//         final response = await http.get(
+//           Uri.parse(url),
+//           headers: {
+//             'Content-Type': 'application/json',
+//             'Accept': 'application/json',
+//           },
+//         );
+
+//         debugPrint('API Response Status Code: ${response.statusCode}');
+
+//         if (response.statusCode == 200) {
+//           final Map<String, dynamic> data = json.decode(response.body);
+//           if (mounted) {
+//             setState(() {
+//               _userDetail = UserDetail.fromJson(data);
+//               _isLoading = false;
+//             });
+//           }
+//         } else {
+//           throw Exception('Failed to load user details: ${response.statusCode}');
+//         }
+//       } else {
+//         throw Exception('No stored email found');
+//       }
+//     } catch (e) {
+//       debugPrint('Error in _loadUserDetails: $e');
+//       if (mounted) {
+//         setState(() {
+//           _error = e.toString();
+//           _isLoading = false;
+//         });
+//       }
+//     }
+//   }
+
+//   Future<bool> _onWillPop() async {
+//     if (_lastBackPressed == null ||
+//         DateTime.now().difference(_lastBackPressed!) > const Duration(seconds: 2)) {
+//       _lastBackPressed = DateTime.now();
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         const SnackBar(
+//           content: Text('Press back again to exit'),
+//           duration: Duration(seconds: 2),
+//         ),
+//       );
+//       return false;
+//     }
+//     return true;
+//   }
+
+//   void _onItemSelected(String item) {
+//     setState(() {
+//       _selectedItem = item;
+//     });
+//     if (item == 'Logout') {
+//       SecureStorageService.clearCredentials().then((_) {
+//         CustomNavigation.navigateToScreen(item, context);
+//       });
+//     } else {
+//       CustomNavigation.navigateToScreen(item, context);
+//     }
+//   }
+
+
+//   Widget _buildContent() {
+//     if (_isLoading) {
+//       return const Center(
+//         child: CircularProgressIndicator(
+//           color: Color.fromARGB(255, 227, 10, 169),
+//         ),
+//       );
+//     }
+
+//     if (_error != null) {
+//       return Center(
+//         child: Padding(
+//           padding: const EdgeInsets.all(16.0),
+//           child: Column(
+//             mainAxisAlignment: MainAxisAlignment.center,
+//             children: [
+//               const Icon(
+//                 Icons.error_outline,
+//                 color: Colors.red,
+//                 size: 48,
+//               ),
+//               const SizedBox(height: 16),
+//               Text(
+//                 'Error loading data:',
+//                 style: GoogleFonts.poppins(
+//                   fontSize: 18,
+//                   fontWeight: FontWeight.bold,
+//                 ),
+//               ),
+//               const SizedBox(height: 8),
+//               Text(
+//                 _error!,
+//                 textAlign: TextAlign.center,
+//                 style: GoogleFonts.poppins(
+//                   color: Colors.red,
+//                 ),
+//               ),
+//               const SizedBox(height: 16),
+//               ElevatedButton.icon(
+//                 onPressed: _loadUserDetails,
+//                 icon: const Icon(Icons.refresh),
+//                 label: Text(
+//                   'Retry',
+//                   style: GoogleFonts.poppins(),
+//                 ),
+//                 style: ElevatedButton.styleFrom(
+//                   backgroundColor: const Color.fromARGB(255, 227, 10, 169),
+//                   foregroundColor: Colors.white,
+//                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+//                 ),
+//               ),
+//             ],
+//           ),
+//         ),
+//       );
+//     }
+
+//     return SingleChildScrollView(
+//       child: Column(
+//         children: [
+//           ProfileInformationWidget(
+//             userDetail: _userDetail!,
+//           ),
+//           ResidentialInformationWidget(
+//             userDetail: _userDetail!,
+//             countries: _countries,
+//             states: _states,
+//           ),
+//            EmergencyContactWidget(
+//           userDetail: _userDetail!,
+//         ),
+//         PassportCopiesWidget(),
+//         ],
+//       ),
+//     );
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return WillPopScope(
+//       onWillPop: _onWillPop,
+//       child: Scaffold(
+//         backgroundColor: Colors.grey[50],
+//         appBar: CustomAppBar(
+//           title: _selectedItem,
+//           icon: Icons.person,
+//           showBackButton: false,
+//           ),
+//           endDrawer: DashboardDrawer(
+//             selectedItem: _selectedItem, 
+//             onItemSelected: _onItemSelected,),
+
+//         body: SafeArea(
+//           child: _buildContent(),
+//         ),
+//       ),
+//     );
+//   }
+// }
 
 
 
