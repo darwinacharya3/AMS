@@ -27,6 +27,11 @@ class UserDetail {
   final String eContactName;
   final String relation;
   final String eContactNo;
+  final String passportFrontPage;
+  final String passportBackPage;
+  final String signature;
+  final String termAndCondition;
+
   
 
   UserDetail({
@@ -57,6 +62,10 @@ class UserDetail {
     required this.eContactName,
     required this.relation,
     required this.eContactNo,
+    required this.passportFrontPage,
+    required this.passportBackPage,
+     required this.signature,
+    required this.termAndCondition,
   });
 
   factory UserDetail.fromJson(Map<String, dynamic> json) {
@@ -91,6 +100,10 @@ class UserDetail {
       eContactName: userData['e_contact_name']?.toString() ?? '',
       relation: userData['relation']?.toString() ?? '',
       eContactNo: userData['e_contact_no']?.toString() ?? '',
+      passportFrontPage: userData['passport_front_page']?.toString() ?? '',
+      passportBackPage: userData['passport_back_page']?.toString() ?? '',
+      signature: userData['signature']?.toString() ?? '',
+      termAndCondition: userData['term_and_condition']?.toString() ?? '',
     );
   }
 }

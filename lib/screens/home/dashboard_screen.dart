@@ -12,7 +12,7 @@ import 'package:ems/widgets/profile_information_widget.dart';
 import 'package:ems/widgets/resident_information_widget.dart';
 import 'package:ems/widgets/emergency_contact_widget.dart';
 import 'package:ems/widgets/passport_copies_widget.dart';
-
+import 'package:ems/widgets/terms_and_condition_widget.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -43,32 +43,47 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _error = null;
       });
 
+      // Get credentials from secure storage
       final email = await SecureStorageService.getUserEmail();
+      final password = await SecureStorageService.getUserPassword();
+      
       debugPrint('Retrieved email from storage: $email');
 
-      if (email == null) {
-        throw Exception('No stored email found');
+      if (email == null || password == null) {
+        throw Exception('Stored credentials not found');
       }
       
-      final url = 'https://extratech.extratechweb.com/api/student/detail/$email';
-      debugPrint('Making API request to: $url');
+      // Use the secure login endpoint
+      final loginUrl = 'https://extratech.extratechweb.com/api/auth/login';
+      debugPrint('Making API request to: $loginUrl');
 
-      final response = await http.get(
-        Uri.parse(url),
+      final loginResponse = await http.post(
+        Uri.parse(loginUrl),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
+        body: json.encode({
+          'email': email,
+          'password': password
+        }),
       );
+      
 
-      debugPrint('API Response Status Code: ${response.statusCode}');
+      debugPrint('API Response Status Code: ${loginResponse.statusCode}');
+      if (loginResponse.statusCode == 200) {
+        // Successfully logged in
+        final responseData = json.decode(loginResponse.body);
+        print('Login response: $responseData');
+      }
 
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> data = json.decode(response.body);
+      if (loginResponse.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(loginResponse.body);
         if (mounted) {
           setState(() {
             _userDetail = UserDetail.fromJson(data);
             
+            // Parse countries and states if they're included in the response
             _countries = (data['countries'] as List?)
                 ?.map((country) => Country.fromJson(country))
                 .toList() ?? [];
@@ -81,14 +96,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
           });
         }
       } else {
-        throw Exception('Failed to load user details: ${response.statusCode}');
+        // Handle various error responses
+        if (loginResponse.statusCode == 401) {
+          throw Exception('Invalid credentials. Please log in again.');
+        } else if (loginResponse.statusCode == 403) {
+          throw Exception('Access denied. You may not have permission to view this information.');
+        } else {
+          throw Exception('Authentication failed: ${loginResponse.statusCode}');
+        }
       }
     } catch (e) {
       debugPrint('Error in _loadData: $e');
       if (mounted) {
         setState(() {
-          // More user-friendly error message
-          _error = 'Unable to load your information. Please try again later.';
+          // Provide more specific error message based on the exception
+          if (e.toString().contains('credentials not found')) {
+            _error = 'Your login session has expired. Please log in again.';
+          } else {
+            _error = 'Unable to load your information. Please try again later.';
+          }
           _isLoading = false;
         });
       }
@@ -121,6 +147,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
     } else {
       CustomNavigation.navigateToScreen(item, context);
     }
+  }
+
+  void _handleRetry() {
+    // Clear error and try again
+    setState(() {
+      _error = null;
+    });
+    _loadData();
   }
 
   Widget _buildContent() {
@@ -161,18 +195,42 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              ElevatedButton.icon(
-                onPressed: _loadData,
-                icon: const Icon(Icons.refresh),
-                label: Text(
-                  'Retry',
-                  style: GoogleFonts.poppins(),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color.fromARGB(255, 227, 10, 169),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: _handleRetry,
+                    icon: const Icon(Icons.refresh),
+                    label: Text(
+                      'Retry',
+                      style: GoogleFonts.poppins(),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color.fromARGB(255, 227, 10, 169),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    ),
+                  ),
+                  if (_error!.contains('login')) ...[
+                    const SizedBox(width: 12),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        // Navigate to login screen
+                        CustomNavigation.navigateToScreen('Login', context);
+                      },
+                      icon: const Icon(Icons.login),
+                      label: Text(
+                        'Login',
+                        style: GoogleFonts.poppins(),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ],
           ),
@@ -206,7 +264,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
           EmergencyContactWidget(
             userDetail: _userDetail!,
           ),
-          const PassportCopiesWidget(),
+          PassportCopiesWidget(
+            userDetail: _userDetail,
+          ),
+          TermsAndConditionWidget(
+            userDetail: _userDetail
+            ),
         ],
       ),
     );
@@ -234,6 +297,260 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// import 'package:flutter/material.dart';
+// import 'package:google_fonts/google_fonts.dart';
+// import 'package:http/http.dart' as http;
+// import 'dart:convert';
+// import 'package:ems/widgets/custom_app_bar.dart';
+// import 'package:ems/widgets/dashboard_drawer.dart';
+// import 'package:ems/widgets/custom_navigation.dart';
+// import 'package:ems/models/user_detail.dart';
+// import 'package:ems/models/location_model.dart';
+// import 'package:ems/services/secure_storage_service.dart';
+// import 'package:ems/widgets/profile_information_widget.dart';
+// import 'package:ems/widgets/resident_information_widget.dart';
+// import 'package:ems/widgets/emergency_contact_widget.dart';
+// import 'package:ems/widgets/passport_copies_widget.dart';
+
+
+// class DashboardScreen extends StatefulWidget {
+//   const DashboardScreen({super.key});
+
+//   @override
+//   State<DashboardScreen> createState() => _DashboardScreenState();
+// }
+
+// class _DashboardScreenState extends State<DashboardScreen> {
+//   String _selectedItem = 'General';
+//   DateTime? _lastBackPressed;
+//   UserDetail? _userDetail;
+//   bool _isLoading = true;
+//   String? _error;
+//   List<Country> _countries = [];
+//   List<StateModel> _states = [];
+  
+//   @override
+//   void initState() {
+//     super.initState();
+//     _loadData();
+//   }
+
+//   Future<void> _loadData() async {
+//     try {
+//       setState(() {
+//         _isLoading = true;
+//         _error = null;
+//       });
+
+//       final email = await SecureStorageService.getUserEmail();
+//       debugPrint('Retrieved email from storage: $email');
+
+//       if (email == null) {
+//         throw Exception('No stored email found');
+//       }
+      
+//       final url = 'https://extratech.extratechweb.com/api/student/detail/$email';
+//       debugPrint('Making API request to: $url');
+
+//       final response = await http.get(
+//         Uri.parse(url),
+//         headers: {
+//           'Content-Type': 'application/json',
+//           'Accept': 'application/json',
+//         },
+//       );
+
+//       debugPrint('API Response Status Code: ${response.statusCode}');
+
+//       if (response.statusCode == 200) {
+//         final Map<String, dynamic> data = json.decode(response.body);
+//         if (mounted) {
+//           setState(() {
+//             _userDetail = UserDetail.fromJson(data);
+            
+//             _countries = (data['countries'] as List?)
+//                 ?.map((country) => Country.fromJson(country))
+//                 .toList() ?? [];
+                
+//             _states = (data['states'] as List?)
+//                 ?.map((state) => StateModel.fromJson(state))
+//                 .toList() ?? [];
+                
+//             _isLoading = false;
+//           });
+//         }
+//       } else {
+//         throw Exception('Failed to load user details: ${response.statusCode}');
+//       }
+//     } catch (e) {
+//       debugPrint('Error in _loadData: $e');
+//       if (mounted) {
+//         setState(() {
+//           // More user-friendly error message
+//           _error = 'Unable to load your information. Please try again later.';
+//           _isLoading = false;
+//         });
+//       }
+//     }
+//   }
+
+//   Future<bool> _onWillPop() async {
+//     if (_lastBackPressed == null ||
+//         DateTime.now().difference(_lastBackPressed!) > const Duration(seconds: 2)) {
+//       _lastBackPressed = DateTime.now();
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         const SnackBar(
+//           content: Text('Press back again to exit'),
+//           duration: Duration(seconds: 2),
+//         ),
+//       );
+//       return false;
+//     }
+//     return true;
+//   }
+
+//   void _onItemSelected(String item) {
+//     setState(() {
+//       _selectedItem = item;
+//     });
+//     if (item == 'Logout') {
+//       SecureStorageService.clearCredentials().then((_) {
+//         CustomNavigation.navigateToScreen(item, context);
+//       });
+//     } else {
+//       CustomNavigation.navigateToScreen(item, context);
+//     }
+//   }
+
+//   Widget _buildContent() {
+//     if (_isLoading) {
+//       return const Center(
+//         child: CircularProgressIndicator(
+//           color: Color.fromARGB(255, 227, 10, 169),
+//         ),
+//       );
+//     }
+
+//     if (_error != null) {
+//       return Center(
+//         child: Padding(
+//           padding: const EdgeInsets.all(16.0),
+//           child: Column(
+//             mainAxisAlignment: MainAxisAlignment.center,
+//             children: [
+//               const Icon(
+//                 Icons.error_outline,
+//                 color: Colors.red,
+//                 size: 48,
+//               ),
+//               const SizedBox(height: 16),
+//               Text(
+//                 'Something went wrong',
+//                 style: GoogleFonts.poppins(
+//                   fontSize: 18,
+//                   fontWeight: FontWeight.bold,
+//                 ),
+//               ),
+//               const SizedBox(height: 8),
+//               Text(
+//                 _error!,
+//                 textAlign: TextAlign.center,
+//                 style: GoogleFonts.poppins(
+//                   color: Colors.red,
+//                 ),
+//               ),
+//               const SizedBox(height: 16),
+//               ElevatedButton.icon(
+//                 onPressed: _loadData,
+//                 icon: const Icon(Icons.refresh),
+//                 label: Text(
+//                   'Retry',
+//                   style: GoogleFonts.poppins(),
+//                 ),
+//                 style: ElevatedButton.styleFrom(
+//                   backgroundColor: const Color.fromARGB(255, 227, 10, 169),
+//                   foregroundColor: Colors.white,
+//                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+//                 ),
+//               ),
+//             ],
+//           ),
+//         ),
+//       );
+//     }
+
+//     // Make sure user details are available before rendering widgets
+//     if (_userDetail == null) {
+//       return Center(
+//         child: Text(
+//           'No user information available.',
+//           style: GoogleFonts.poppins(
+//             fontSize: 16,
+//           ),
+//         ),
+//       );
+//     }
+
+//     return SingleChildScrollView(
+//       child: Column(
+//         children: [
+//           ProfileInformationWidget(
+//             userDetail: _userDetail!,
+//           ),
+//           ResidentialInformationWidget(
+//             userDetail: _userDetail!,
+//             countries: _countries,
+//             states: _states,
+//           ),
+//           EmergencyContactWidget(
+//             userDetail: _userDetail!,
+//           ),
+//           const PassportCopiesWidget(),
+//         ],
+//       ),
+//     );
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return WillPopScope(
+//       onWillPop: _onWillPop,
+//       child: Scaffold(
+//         backgroundColor: Colors.grey[50],
+//         appBar: CustomAppBar(
+//           title: _selectedItem,
+//           icon: Icons.person,
+//           showBackButton: false,
+//         ),
+//         endDrawer: DashboardDrawer(
+//           selectedItem: _selectedItem, 
+//           onItemSelected: _onItemSelected,
+//         ),
+//         body: SafeArea(
+//           child: _buildContent(),
+//         ),
+//       ),
+//     );
+//   }
+// }
 
 
 

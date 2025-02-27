@@ -24,7 +24,7 @@ class EMSApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: const SignUpScreen(),
+      home: SignUpScreen(),
     );
   }
 }
