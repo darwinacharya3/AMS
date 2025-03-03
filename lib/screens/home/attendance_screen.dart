@@ -42,97 +42,34 @@ class AttendanceScreen extends ConsumerWidget {
             CustomNavigation.navigateToScreen(item, context,);
           },
         ),
-        body: WebViewWidget(controller: webViewController),
-      ),
-    );
+        body: Stack(
+  children: [
+    // White background that will show while content loads
+    Container(
+      color: Colors.white,
+    ),
+    
+    // WebView on top of the white background
+    WebViewWidget(controller: webViewController),
+    
+    // Loading indicator that displays until page is fully loaded
+    // Consumer(
+    //   builder: (context, ref, child) {
+    //     final isLoading = ref.watch(attendanceControllerProvider.select(
+    //       (controller) => controller.isLoading,
+    //     ));
+        
+    //     return isLoading 
+    //       ? const Center(child: CircularProgressIndicator())
+    //       : const SizedBox.shrink();
+    //   },
+    // ),
+  ],
+),
+    ),);
   }
 }
 
-
-
-
-
-
-
-
-
-
-
-// import 'package:flutter/material.dart';
-// import 'package:get/get.dart';
-// import 'package:webview_flutter/webview_flutter.dart';
-
-// import 'package:ems/screens/home/dashboard_screen.dart';
-// import 'package:ems/widgets/dashboard_drawer.dart';
-// import 'package:ems/widgets/custom_app_bar.dart';
-// import 'package:ems/widgets/custom_navigation.dart';
-
-// class AttendanceScreen extends StatefulWidget {
-//   const AttendanceScreen({Key? key}) : super(key: key);
-
-//   @override
-//   State<AttendanceScreen> createState() => _AttendanceScreenState();
-// }
-
-// class _AttendanceScreenState extends State<AttendanceScreen> {
-//   late final WebViewController _webViewController;
-
-//   @override
-//   void initState() {
-//     super.initState();
-
-//     _webViewController = WebViewController()
-//       ..setJavaScriptMode(JavaScriptMode.unrestricted)
-//       ..setNavigationDelegate(
-//         NavigationDelegate(
-//           onPageFinished: (String url) async {
-//             // Hide the navigation bar if it exists
-//             await _webViewController.runJavaScript(
-//               "document.querySelector('nav')?.style.display = 'none';"
-//             );
-
-//             // Click the "Attendance" tab by ID (change if necessary)
-//             await _webViewController.runJavaScript(
-//               "document.getElementById('nav-profile-tab')?.click();"
-//             );
-//           },
-//         ),
-//       )
-//       ..loadRequest(Uri.parse('https://extratech.extratechweb.com/student'));
-//   }
-
-//   // Handle back button behavior
-//   Future<bool> _onWillPop() async {
-//     if (await _webViewController.canGoBack()) {
-//       _webViewController.goBack();
-//       return false;
-//     } else {
-//       Get.to(() => const DashboardScreen());
-//       return false;
-//     }
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return WillPopScope(
-//       onWillPop: _onWillPop,
-//       child: Scaffold(
-//         appBar: const CustomAppBar(
-//           title: 'Attendance',
-//           icon: Icons.calendar_today,
-//           showBackButton: true,
-//         ),
-//         endDrawer: DashboardDrawer(
-//           selectedItem: 'Attendance',
-//           onItemSelected: (String item) {
-//             CustomNavigation.navigateToScreen(item, context);
-//           },
-//         ),
-//         body: WebViewWidget(controller: _webViewController),
-//       ),
-//     );
-//   }
-// }
 
 
 

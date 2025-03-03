@@ -6,9 +6,9 @@ class EmergencyContactWidget extends StatelessWidget {
   final UserDetail userDetail;
 
   const EmergencyContactWidget({
-    Key? key,
+    super.key,
     required this.userDetail,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

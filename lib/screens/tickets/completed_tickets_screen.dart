@@ -8,7 +8,7 @@ import 'package:ems/widgets/custom_app_bar.dart';
 import 'package:ems/widgets/custom_navigation.dart';
 
 class CompletedTicketsScreen extends StatefulWidget {
-  const CompletedTicketsScreen({Key? key}) : super(key: key);
+  const CompletedTicketsScreen({super.key});
 
   @override
   State<CompletedTicketsScreen> createState() => _CompletedTicketsScreenState();

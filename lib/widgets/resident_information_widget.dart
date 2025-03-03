@@ -10,11 +10,11 @@ class ResidentialInformationWidget extends StatelessWidget {
   final List<StateModel> states;
   
   const ResidentialInformationWidget({
-    Key? key,
+    super.key,
     required this.userDetail,
     required this.countries,
     required this.states,
-  }) : super(key: key);
+  });
 
    String _getCountryName(String countryId) {
     final country = countries.firstWhere(

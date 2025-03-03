@@ -8,7 +8,7 @@ import 'package:ems/widgets/custom_app_bar.dart';
 import 'package:ems/widgets/custom_navigation.dart';
 
 class ZoomLinksScreen extends StatefulWidget {
-  const ZoomLinksScreen({Key? key}) : super(key: key);
+  const ZoomLinksScreen({super.key});
 
   @override
   State<ZoomLinksScreen> createState() => _ZoomLinksScreenState();

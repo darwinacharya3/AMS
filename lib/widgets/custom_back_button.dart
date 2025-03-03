@@ -9,12 +9,12 @@ class CustomBackButton extends StatelessWidget {
   final VoidCallback? onPressed;
 
   const CustomBackButton({
-    Key? key,
+    super.key,
     this.iconColor = const Color.fromARGB(255, 227, 10, 169),
     this.iconSize = 24.0,
     this.padding = const EdgeInsets.all(8.0),
     this.onPressed,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

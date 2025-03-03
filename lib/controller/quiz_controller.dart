@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-class AttendanceController extends StateNotifier<WebViewController> {
-  AttendanceController() : super(WebViewController()) {
+class QuizController extends StateNotifier<WebViewController> {
+  QuizController() : super(WebViewController()) {
     // Using a local variable for clarity
     final controller = state;
     
@@ -131,23 +131,24 @@ class AttendanceController extends StateNotifier<WebViewController> {
               // One last attempt to hide the navigation elements
               hideNavElements();
               
-              // Find Attendance tab explicitly by text content
+              // Find Quiz tab explicitly by text content
               const tabs = Array.from(document.querySelectorAll('a[role="tab"]'));
               console.log('Found ' + tabs.length + ' tabs');
               
-              // Look for the attendance tab by checking content and click it
-              const attendanceTab = tabs.find(tab => 
-                tab.textContent.includes('Attendance') ||
-                tab.querySelector('h1')?.textContent.includes('Attendance')
+              // Look for the quiz tab by checking content and click it
+              const quizTab = tabs.find(tab => 
+                tab.textContent.includes('Quiz') ||
+                tab.querySelector('h1')?.textContent.includes('Quiz')
               );
               
-              if (attendanceTab) {
-                console.log('Found attendance tab, clicking it');
-                attendanceTab.click();
+              if (quizTab) {
+                console.log('Found quiz tab, clicking it');
+                quizTab.click();
               } else {
-                console.error('Could not find attendance tab');
+                console.error('Could not find quiz tab');
                 // Fallback to ID if available
-                document.getElementById('nav-profile-tab')?.click();
+                document.getElementById('nav-contact-tab')?.click() ||
+                document.querySelector('a[data-bs-target="#nav-contact"]')?.click();
               }
               
               // Hide profile sections
@@ -179,7 +180,7 @@ class AttendanceController extends StateNotifier<WebViewController> {
                 
                 /* Hide middle navigation section */
                 a[href*="general"],
-                a[href*="quiz"],
+                a[href*="attendance"],
                 a[href*="career"],
                 a:not([role="tab"]):contains("General"),
                 a:not([role="tab"]):contains("Attendance"),
@@ -270,9 +271,22 @@ class AttendanceController extends StateNotifier<WebViewController> {
   }
 }
 
-final attendanceControllerProvider = StateNotifierProvider<AttendanceController, WebViewController>((ref) {
-  return AttendanceController();
+final quizControllerProvider = StateNotifierProvider<QuizController, WebViewController>((ref) {
+  return QuizController();
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -281,8 +295,8 @@ final attendanceControllerProvider = StateNotifierProvider<AttendanceController,
 // import 'package:flutter_riverpod/flutter_riverpod.dart';
 // import 'package:webview_flutter/webview_flutter.dart';
 
-// class AttendanceController extends StateNotifier<WebViewController> {
-//   AttendanceController() : super(WebViewController()) {
+// class QuizController extends StateNotifier<WebViewController> {
+//   QuizController() : super(WebViewController()) {
 //     // Using a local variable for clarity
 //     final controller = state;
     
@@ -292,7 +306,7 @@ final attendanceControllerProvider = StateNotifierProvider<AttendanceController,
 //         onPageFinished: (String url) async {
 //           // Log the DOM structure to understand what elements we need to target
 //           await controller.runJavaScript('''
-//             console.log('Page loaded, running custom JS');
+//             console.log('Page loaded, running custom JS for Quiz');
             
 //             // Step 1: First hide navigation elements
 //             try {
@@ -310,23 +324,23 @@ final attendanceControllerProvider = StateNotifierProvider<AttendanceController,
 //             // Step 2: Wait a moment to ensure page is fully loaded
 //             setTimeout(() => {
 //               try {
-//                 // Find Attendance tab explicitly by text content
+//                 // Find Quiz tab explicitly by text content
 //                 const tabs = Array.from(document.querySelectorAll('a[role="tab"]'));
 //                 console.log('Found ' + tabs.length + ' tabs');
                 
-//                 // Look for the attendance tab by checking content and click it
-//                 const attendanceTab = tabs.find(tab => 
-//                   tab.textContent.includes('Attendance') ||
-//                   tab.querySelector('h1')?.textContent.includes('Attendance')
+//                 // Look for the quiz tab by checking content and click it
+//                 const quizTab = tabs.find(tab => 
+//                   tab.textContent.includes('Quiz') ||
+//                   tab.querySelector('h1')?.textContent.includes('Quiz')
 //                 );
                 
-//                 if (attendanceTab) {
-//                   console.log('Found attendance tab, clicking it');
-//                   attendanceTab.click();
+//                 if (quizTab) {
+//                   console.log('Found quiz tab, clicking it');
+//                   quizTab.click();
 //                 } else {
-//                   console.error('Could not find attendance tab');
+//                   console.error('Could not find quiz tab');
 //                   // Fallback to ID if available
-//                   document.getElementById('nav-profile-tab')?.click();
+//                   document.getElementById('nav-contact-tab')?.click();
 //                 }
                 
 //                 // Hide profile sections
@@ -356,54 +370,6 @@ final attendanceControllerProvider = StateNotifierProvider<AttendanceController,
 //   }
 // }
 
-// final attendanceControllerProvider = StateNotifierProvider<AttendanceController, WebViewController>((ref) {
-//   return AttendanceController();
-// });
-
-
-
-
-
-
-
-
-
-
-// import 'package:flutter_riverpod/flutter_riverpod.dart';
-// import 'package:webview_flutter/webview_flutter.dart';
-
-// class AttendanceController extends StateNotifier<WebViewController> {
-//   AttendanceController() : super(WebViewController()) {
-//     // Using a local variable for clarity
-//     final controller = state;
-    
-//     controller.setJavaScriptMode(JavaScriptMode.unrestricted);
-//     controller.setNavigationDelegate(
-//       NavigationDelegate(
-//         onPageFinished: (String url) async {
-//           // Hide the navigation bar if it exists
-//           await controller.runJavaScript(
-//             "document.querySelector('nav')?.style.display = 'none';"
-//           );
-//           // Click the "Attendance" tab by ID
-//           await controller.runJavaScript(
-//             "document.getElementById('nav-profile-tab')?.click();"
-//           );
-//         },
-//       ),
-//     );
-//     controller.loadRequest(Uri.parse('https://extratech.extratechweb.com/student'));
-//   }
-
-//   Future<bool> canGoBack() async {
-//     return await state.canGoBack();
-//   }
-
-//   void goBack() {
-//     state.goBack();
-//   }
-// }
-
-// final attendanceControllerProvider = StateNotifierProvider<AttendanceController, WebViewController>((ref) {
-//   return AttendanceController();
+// final quizControllerProvider = StateNotifierProvider<QuizController, WebViewController>((ref) {
+//   return QuizController();
 // });

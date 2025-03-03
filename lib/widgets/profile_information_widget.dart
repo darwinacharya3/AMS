@@ -7,9 +7,9 @@ class ProfileInformationWidget extends StatelessWidget {
   static const String baseImageUrl = 'https://extratech.extratechweb.com';
   
   const ProfileInformationWidget({
-    Key? key,
+    super.key,
     required this.userDetail,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

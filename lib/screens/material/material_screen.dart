@@ -8,7 +8,7 @@ import 'package:ems/widgets/custom_app_bar.dart';
 import 'package:ems/widgets/custom_navigation.dart';
 
 class MaterialsScreen extends StatefulWidget {
-  const MaterialsScreen({Key? key}) : super(key: key);
+  const MaterialsScreen({super.key});
 
   @override
   State<MaterialsScreen> createState() => _MaterialsScreenState();

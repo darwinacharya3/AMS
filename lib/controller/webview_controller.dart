@@ -47,7 +47,7 @@ static Future<void> _configureController(
     required Function(String) onError,
     required Function() onSignupSuccess,
   }) async {
-    await controller
+    controller
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(const Color(0x00000000))
       ..setNavigationDelegate(_createNavigationDelegate(

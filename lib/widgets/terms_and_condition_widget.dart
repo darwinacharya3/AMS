@@ -10,9 +10,9 @@ class TermsAndConditionWidget extends StatefulWidget {
   final UserDetail? userDetail;
   
   const TermsAndConditionWidget({
-    Key? key,
+    super.key,
     required this.userDetail,
-  }) : super(key: key);
+  });
 
   @override
   State<TermsAndConditionWidget> createState() => _TermsAndConditionWidgetState();
