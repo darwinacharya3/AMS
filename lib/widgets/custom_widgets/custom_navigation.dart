@@ -7,6 +7,7 @@ import 'package:ems/services/secure_storage_service.dart';
 import 'package:ems/screens/home/attendance_screen.dart';
 import 'package:ems/screens/home/career_screen.dart';
 import 'package:ems/screens/home/quiz_screen.dart';
+import 'package:ems/screens/membership_card/membership_card_screen.dart';
 import 'package:ems/screens/material/material_screen.dart';
 import 'package:ems/screens/zoom_link/zoom_link_screen.dart';
 import 'package:ems/screens/tickets/all_tickets_screen.dart';
@@ -34,6 +35,9 @@ class CustomNavigation {
           break;
         case 'Career':
           Get.to(() => const CareerScreen(), transition: Transition.rightToLeft);
+          break;
+         case 'Membership Card':
+          Get.to(() => const MembershipCardScreen(), transition: Transition.rightToLeft);
           break;
         case 'Materials':
           Get.to(() => const MaterialsScreen(), transition: Transition.rightToLeft);

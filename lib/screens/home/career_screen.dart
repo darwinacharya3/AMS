@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:ems/controller/career_controller.dart';
 import 'package:ems/screens/home/dashboard_screen.dart';
-import 'package:ems/widgets/dashboard_drawer.dart';
-import 'package:ems/widgets/custom_app_bar.dart';
-import 'package:ems/widgets/custom_navigation.dart';
+import 'package:ems/widgets/custom_widgets/dashboard_drawer.dart';
+import 'package:ems/widgets/custom_widgets/custom_app_bar.dart';
+import 'package:ems/widgets/custom_widgets/custom_navigation.dart';
 
 class CareerScreen extends ConsumerWidget {
   const CareerScreen({super.key});

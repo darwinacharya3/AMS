@@ -39,6 +39,7 @@ class DashboardDrawer extends StatelessWidget {
                   ],
                   ['General', 'Attendance', 'Quiz', 'Career'],
                 ),
+                 _buildListTile(context, 'Membership Card', Icons.card_membership_outlined),
                 _buildListTile(context, 'Materials', Icons.library_books),
                 _buildListTile(context, 'Zoom Links', Icons.videocam),
                 _buildExpansionTile(

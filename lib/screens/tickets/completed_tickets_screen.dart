@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:ems/screens/home/dashboard_screen.dart';
-import 'package:ems/widgets/dashboard_drawer.dart';
-import 'package:ems/widgets/custom_app_bar.dart';
-import 'package:ems/widgets/custom_navigation.dart';
+import 'package:ems/widgets/custom_widgets/dashboard_drawer.dart';
+import 'package:ems/widgets/custom_widgets/custom_app_bar.dart';
+import 'package:ems/widgets/custom_widgets/custom_navigation.dart';
 
 class CompletedTicketsScreen extends StatefulWidget {
   const CompletedTicketsScreen({super.key});

@@ -102,6 +102,7 @@ class _TermsAndConditionWidgetState extends State<TermsAndConditionWidget> {
       if (loginResponse.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(loginResponse.body);
         debugPrint('TermsWidget: Response keys: ${data.keys.toList()}');
+        
         // Check for the three terms pages
         _termsPages = [];
         if (data.containsKey('termsAndConditionFirstPage')) {

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import 'loading_indicator.dart';
-import 'error_display.dart';
+import '../custom_widgets/loading_indicator.dart';
+import '../custom_widgets/error_display.dart';
 
 class WebViewContainer extends StatelessWidget {
   final WebViewController controller;

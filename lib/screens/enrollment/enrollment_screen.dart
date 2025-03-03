@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import '../../widgets/web_view_container.dart';
+import '../../widgets/enrollment_widget/web_view_container.dart';
 import '../../controller/webview_controller.dart';
 import '../home/dashboard_screen.dart';  // Import your home screen
 
