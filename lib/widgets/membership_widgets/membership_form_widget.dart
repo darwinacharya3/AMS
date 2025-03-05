@@ -34,24 +34,24 @@ class _MembershipFormState extends State<MembershipForm> {
         _isLoading = true;
       });
 
-      print("Fetching membership types..."); // Debug print
+      // print("Fetching membership types..."); // Debug print
       
       // Fetch from API
       final types = await MembershipCardService.getMembershipTypes();
       
-      print("Received types: ${types.length}"); // Debug print
+      // print("Received types: ${types.length}"); // Debug print
       
       // Debug print membership types
-      for (var type in types) {
-        print("Type: ${type['type']} - Amount: ${type['amount']} - Currency: ${type['currency']}");
-      }
+      // for (var type in types) {
+        // print("Type: ${type['type']} - Amount: ${type['amount']} - Currency: ${type['currency']}");
+      // }
       
       setState(() {
         _membershipTypes = types;
         _isLoading = false;
       });
     } catch (e) {
-      print("Error in _fetchMembershipTypes: $e"); // Debug print
+      // print("Error in _fetchMembershipTypes: $e"); // Debug print
       
       setState(() {
         _isLoading = false;
@@ -280,7 +280,7 @@ class _MembershipFormState extends State<MembershipForm> {
               
               // Paid Amount
               Text(
-                'Paid Amount (Rs.)',
+                'Paid Amount (AUD/NPR)',
                 style: GoogleFonts.poppins(
                   fontSize: 16,
                   color: Colors.deepPurple[800],
