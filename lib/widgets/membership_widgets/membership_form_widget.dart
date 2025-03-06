@@ -6,8 +6,13 @@ import 'package:ems/services/membership_card_services.dart';
 
 class MembershipForm extends StatefulWidget {
   final Function onSubmit;
+  final List<Map<String, dynamic>>? membershipTypes;
 
-  const MembershipForm({Key? key, required this.onSubmit}) : super(key: key);
+  const MembershipForm({
+    Key? key,
+    required this.onSubmit,
+    this.membershipTypes,
+  }) : super(key: key);
 
   @override
   State<MembershipForm> createState() => _MembershipFormState();
@@ -15,17 +20,24 @@ class MembershipForm extends StatefulWidget {
 
 class _MembershipFormState extends State<MembershipForm> {
   final _formKey = GlobalKey<FormState>();
-  String? _selectedMembershipType;
+  int? _selectedMembershipTypeId;
   final TextEditingController _paidAmountController = TextEditingController();
   File? _paymentSlip;
   bool _isLoading = false;
   List<Map<String, dynamic>> _membershipTypes = [];
   final ImagePicker _picker = ImagePicker();
+  // String? _selectedTypeName;
 
   @override
   void initState() {
     super.initState();
-    _fetchMembershipTypes();
+    if (widget.membershipTypes != null && widget.membershipTypes!.isNotEmpty) {
+      setState(() {
+        _membershipTypes = widget.membershipTypes!;
+      });
+    } else {
+      _fetchMembershipTypes();
+    }
   }
 
   Future<void> _fetchMembershipTypes() async {
@@ -33,37 +45,28 @@ class _MembershipFormState extends State<MembershipForm> {
       setState(() {
         _isLoading = true;
       });
-
-      // print("Fetching membership types..."); // Debug print
       
       // Fetch from API
       final types = await MembershipCardService.getMembershipTypes();
-      
-      // print("Received types: ${types.length}"); // Debug print
-      
-      // Debug print membership types
-      // for (var type in types) {
-        // print("Type: ${type['type']} - Amount: ${type['amount']} - Currency: ${type['currency']}");
-      // }
       
       setState(() {
         _membershipTypes = types;
         _isLoading = false;
       });
     } catch (e) {
-      // print("Error in _fetchMembershipTypes: $e"); // Debug print
-      
       setState(() {
         _isLoading = false;
       });
       
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error loading membership types: $e'),
-          backgroundColor: Colors.red,
-          duration: Duration(seconds: 5),
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading membership types: $e'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 5),
+          ),
+        );
+      }
     }
   }
 
@@ -138,14 +141,18 @@ class _MembershipFormState extends State<MembershipForm> {
     );
   }
 
-  void _updatePaidAmount(String type) {
-    // Changed from 'name' to 'type' to match the API response
+  void _updatePaidAmount(int typeId) {
+    // Find the type by ID
     final selectedType = _membershipTypes.firstWhere(
-      (element) => element['type'] == type,
-      orElse: () => {'amount': 0},
+      (element) => element['id'] == typeId,
+      orElse: () => {'amount': 0, 'type': 'Unknown'},
     );
     
-    _paidAmountController.text = selectedType['amount'].toString();
+    // Update paid amount and selected type name
+    setState(() {
+      _paidAmountController.text = selectedType['amount'].toString();
+      // _selectedTypeName = selectedType['type'];
+    });
   }
 
   void _submitForm() async {
@@ -165,20 +172,22 @@ class _MembershipFormState extends State<MembershipForm> {
       });
       
       try {
-        // Prepare form data
+        // Prepare form data matching the API expectations
         Map<String, dynamic> formData = {
-          'membershipType': _selectedMembershipType,
-          'paidAmount': _paidAmountController.text,
-          'paymentSlip': _paymentSlip,
+          'card_type_id': _selectedMembershipTypeId.toString(),
+          'amount': _paidAmountController.text,
+          'payment_slip': _paymentSlip,
         };
         
         // Submit to parent handler
         widget.onSubmit(formData);
       } catch (e) {
         // Show error
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: $e')),
+          );
+        }
         
         setState(() {
           _isLoading = false;
@@ -232,7 +241,7 @@ class _MembershipFormState extends State<MembershipForm> {
                   border: Border.all(color: Colors.deepPurple.shade200),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: DropdownButtonFormField<String>(
+                child: DropdownButtonFormField<int>(
                   decoration: InputDecoration(
                     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     border: InputBorder.none,
@@ -246,17 +255,16 @@ class _MembershipFormState extends State<MembershipForm> {
                       color: Colors.grey[600],
                     ),
                   ),
-                  value: _selectedMembershipType,
+                  value: _selectedMembershipTypeId,
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
+                    if (value == null) {
                       return 'Please select a membership type';
                     }
                     return null;
                   },
-                  // Changed 'name' to 'type' to match the API response structure
                   items: _membershipTypes.map((type) {
-                    return DropdownMenuItem<String>(
-                      value: type['type'],
+                    return DropdownMenuItem<int>(
+                      value: type['id'],
                       child: Text(
                         '${type['type']} - ${type['currency']} ${type['amount']}',
                         style: GoogleFonts.poppins(),
@@ -265,8 +273,10 @@ class _MembershipFormState extends State<MembershipForm> {
                   }).toList(),
                   onChanged: (value) {
                     setState(() {
-                      _selectedMembershipType = value;
-                      _updatePaidAmount(value!);
+                      _selectedMembershipTypeId = value;
+                      if (value != null) {
+                        _updatePaidAmount(value);
+                      }
                     });
                   },
                   icon: Icon(
@@ -274,6 +284,7 @@ class _MembershipFormState extends State<MembershipForm> {
                     color: Colors.deepPurple[800],
                   ),
                   dropdownColor: Colors.white,
+                  isExpanded: true,
                 ),
               ),
               const SizedBox(height: 24),
@@ -450,11 +461,17 @@ class _MembershipFormState extends State<MembershipForm> {
 // import 'dart:io';
 // import 'package:image_picker/image_picker.dart';
 // import 'package:ems/services/membership_card_services.dart';
+// import 'dart:developer' as developer;
 
 // class MembershipForm extends StatefulWidget {
 //   final Function onSubmit;
+//   final List<Map<String, dynamic>>? membershipTypes; // Accept types from parent
 
-//   const MembershipForm({Key? key, required this.onSubmit}) : super(key: key);
+//   const MembershipForm({
+//     Key? key,
+//     required this.onSubmit,
+//     this.membershipTypes, // Make it optional for backward compatibility
+//   }) : super(key: key);
 
 //   @override
 //   State<MembershipForm> createState() => _MembershipFormState();
@@ -462,17 +479,26 @@ class _MembershipFormState extends State<MembershipForm> {
 
 // class _MembershipFormState extends State<MembershipForm> {
 //   final _formKey = GlobalKey<FormState>();
-//   String? _selectedMembershipType;
+//   int? _selectedMembershipTypeId;
 //   final TextEditingController _paidAmountController = TextEditingController();
 //   File? _paymentSlip;
 //   bool _isLoading = false;
 //   List<Map<String, dynamic>> _membershipTypes = [];
 //   final ImagePicker _picker = ImagePicker();
+//   // String? _selectedTypeName;
 
 //   @override
 //   void initState() {
 //     super.initState();
-//     _fetchMembershipTypes();
+//     // Use provided types or fetch them
+//     if (widget.membershipTypes != null && widget.membershipTypes!.isNotEmpty) {
+//       setState(() {
+//         _membershipTypes = widget.membershipTypes!;
+//       });
+//       developer.log('Using provided membership types: ${_membershipTypes.length}');
+//     } else {
+//       _fetchMembershipTypes();
+//     }
 //   }
 
 //   Future<void> _fetchMembershipTypes() async {
@@ -481,21 +507,38 @@ class _MembershipFormState extends State<MembershipForm> {
 //         _isLoading = true;
 //       });
 
+//       developer.log("Fetching membership types...");
+      
 //       // Fetch from API
 //       final types = await MembershipCardService.getMembershipTypes();
+      
+//       developer.log("Received types: ${types.length}");
+      
+//       // Debug print membership types
+//       for (var type in types) {
+//         developer.log("Type: ${type['type']} - ID: ${type['id']} - Amount: ${type['amount']} - Currency: ${type['currency']}");
+//       }
       
 //       setState(() {
 //         _membershipTypes = types;
 //         _isLoading = false;
 //       });
 //     } catch (e) {
+//       developer.log("Error in _fetchMembershipTypes: $e");
+      
 //       setState(() {
 //         _isLoading = false;
 //       });
       
-//       ScaffoldMessenger.of(context).showSnackBar(
-//         SnackBar(content: Text('Error loading membership types: $e')),
-//       );
+//       if (mounted) {
+//         ScaffoldMessenger.of(context).showSnackBar(
+//           SnackBar(
+//             content: Text('Error loading membership types: $e'),
+//             backgroundColor: Colors.red,
+//             duration: Duration(seconds: 5),
+//           ),
+//         );
+//       }
 //     }
 //   }
 
@@ -570,13 +613,20 @@ class _MembershipFormState extends State<MembershipForm> {
 //     );
 //   }
 
-//   void _updatePaidAmount(String type) {
+//   void _updatePaidAmount(int typeId) {
+//     // Find the type by ID
 //     final selectedType = _membershipTypes.firstWhere(
-//       (element) => element['name'] == type,
-//       orElse: () => {'amount': 0},
+//       (element) => element['id'] == typeId,
+//       orElse: () => {'amount': 0, 'type': 'Unknown'},
 //     );
     
-//     _paidAmountController.text = selectedType['amount'].toString();
+//     // Update paid amount and selected type name
+//     setState(() {
+//       _paidAmountController.text = selectedType['amount'].toString();
+//       // _selectedTypeName = selectedType['type'];
+//     });
+    
+//     developer.log('Selected type: ${selectedType['type']}, Amount: ${selectedType['amount']}');
 //   }
 
 //   void _submitForm() async {
@@ -596,20 +646,24 @@ class _MembershipFormState extends State<MembershipForm> {
 //       });
       
 //       try {
-//         // Prepare form data
+//         // Prepare form data matching the API expectations
 //         Map<String, dynamic> formData = {
-//           'membershipType': _selectedMembershipType,
-//           'paidAmount': _paidAmountController.text,
-//           'paymentSlip': _paymentSlip,
+//           'card_type_id': _selectedMembershipTypeId.toString(), // API expects card_type_id
+//           'amount': _paidAmountController.text, // API expects amount
+//           'payment_slip': _paymentSlip, // API expects payment_slip
 //         };
+        
+//         developer.log('Submitting form data: $formData');
         
 //         // Submit to parent handler
 //         widget.onSubmit(formData);
 //       } catch (e) {
 //         // Show error
-//         ScaffoldMessenger.of(context).showSnackBar(
-//           SnackBar(content: Text('Error: $e')),
-//         );
+//         if (mounted) {
+//           ScaffoldMessenger.of(context).showSnackBar(
+//             SnackBar(content: Text('Error: $e')),
+//           );
+//         }
         
 //         setState(() {
 //           _isLoading = false;
@@ -649,6 +703,24 @@ class _MembershipFormState extends State<MembershipForm> {
 //               ),
 //               const SizedBox(height: 24),
               
+//               // Debug info for troubleshooting
+//               if (_membershipTypes.isEmpty)
+//                 Container(
+//                   padding: EdgeInsets.all(8),
+//                   decoration: BoxDecoration(
+//                     color: Colors.yellow[100],
+//                     borderRadius: BorderRadius.circular(4),
+//                     border: Border.all(color: Colors.orange),
+//                   ),
+//                   child: Text(
+//                     'No membership types available. Please refresh or contact support.',
+//                     style: GoogleFonts.poppins(
+//                       fontSize: 14,
+//                       color: Colors.orange[800],
+//                     ),
+//                   ),
+//                 ),
+              
 //               // Membership Type
 //               Text(
 //                 'Membership Type',
@@ -663,7 +735,7 @@ class _MembershipFormState extends State<MembershipForm> {
 //                   border: Border.all(color: Colors.deepPurple.shade200),
 //                   borderRadius: BorderRadius.circular(8),
 //                 ),
-//                 child: DropdownButtonFormField<String>(
+//                 child: DropdownButtonFormField<int>(
 //                   decoration: InputDecoration(
 //                     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
 //                     border: InputBorder.none,
@@ -677,26 +749,29 @@ class _MembershipFormState extends State<MembershipForm> {
 //                       color: Colors.grey[600],
 //                     ),
 //                   ),
-//                   value: _selectedMembershipType,
+//                   value: _selectedMembershipTypeId,
 //                   validator: (value) {
-//                     if (value == null || value.isEmpty) {
+//                     if (value == null) {
 //                       return 'Please select a membership type';
 //                     }
 //                     return null;
 //                   },
+//                   // Use ID as value instead of type name
 //                   items: _membershipTypes.map((type) {
-//                     return DropdownMenuItem<String>(
-//                       value: type['name'],
+//                     return DropdownMenuItem<int>(
+//                       value: type['id'],
 //                       child: Text(
-//                         '${type['name']} - Rs. ${type['amount']}',
+//                         '${type['type']} - ${type['currency']} ${type['amount']}',
 //                         style: GoogleFonts.poppins(),
 //                       ),
 //                     );
 //                   }).toList(),
 //                   onChanged: (value) {
 //                     setState(() {
-//                       _selectedMembershipType = value;
-//                       _updatePaidAmount(value!);
+//                       _selectedMembershipTypeId = value;
+//                       if (value != null) {
+//                         _updatePaidAmount(value);
+//                       }
 //                     });
 //                   },
 //                   icon: Icon(
@@ -704,13 +779,14 @@ class _MembershipFormState extends State<MembershipForm> {
 //                     color: Colors.deepPurple[800],
 //                   ),
 //                   dropdownColor: Colors.white,
+//                   isExpanded: true,
 //                 ),
 //               ),
 //               const SizedBox(height: 24),
               
 //               // Paid Amount
 //               Text(
-//                 'Paid Amount (Rs.)',
+//                 'Paid Amount (AUD/NPR)',
 //                 style: GoogleFonts.poppins(
 //                   fontSize: 16,
 //                   color: Colors.deepPurple[800],
@@ -869,266 +945,3 @@ class _MembershipFormState extends State<MembershipForm> {
 // }
 
 
-
-
-
-
-
-// import 'package:flutter/material.dart';
-// import 'package:google_fonts/google_fonts.dart';
-// import 'dart:io';
-// import 'package:file_picker/file_picker.dart';
-// // import 'package:image_picker/image_picker.dart';
-
-// class MembershipForm extends StatefulWidget {
-//   final Function onSubmit;
-
-//   const MembershipForm({Key? key, required this.onSubmit}) : super(key: key);
-
-//   @override
-//   State<MembershipForm> createState() => _MembershipFormState();
-// }
-
-// class _MembershipFormState extends State<MembershipForm> {
-//   final _formKey = GlobalKey<FormState>();
-//   String? _selectedMembershipType;
-//   final TextEditingController _paidAmountController = TextEditingController();
-//   File? _paymentSlip;
-//   bool _isLoading = false;
-//   List<Map<String, dynamic>> _membershipTypes = [];
-
-//   @override
-//   void initState() {
-//     super.initState();
-//     _fetchMembershipTypes();
-//   }
-
-//   Future<void> _fetchMembershipTypes() async {
-//     // In a real implementation, you'd fetch from the API:
-//     // https://extratech.extratechweb.com/api/student/membership-types
-//     setState(() {
-//       _isLoading = true;
-//     });
-
-//     // Simulate API call for now
-//     await Future.delayed(const Duration(seconds: 1));
-    
-//     // Sample data (replace with actual API call)
-//     setState(() {
-//       _membershipTypes = [
-//         {"id": 1, "name": "Standard", "amount": 1000},
-//         {"id": 2, "name": "Premium", "amount": 2000},
-//         {"id": 3, "name": "VIP", "amount": 5000},
-//       ];
-//       _isLoading = false;
-//     });
-//   }
-
-//   Future<void> _pickPaymentSlip() async {
-//     try {
-//       final result = await FilePicker.platform.pickFiles(
-//         type: FileType.image,
-//         allowCompression: true,
-//       );
-
-//       if (result != null) {
-//         setState(() {
-//           _paymentSlip = File(result.files.single.path!);
-//         });
-//       }
-//     } catch (e) {
-//       ScaffoldMessenger.of(context).showSnackBar(
-//         SnackBar(content: Text('Error picking file: $e')),
-//       );
-//     }
-//   }
-
-//   void _updatePaidAmount(String type) {
-//     final selectedType = _membershipTypes.firstWhere(
-//       (element) => element['name'] == type,
-//       orElse: () => {'amount': 0},
-//     );
-    
-//     _paidAmountController.text = selectedType['amount'].toString();
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     if (_isLoading) {
-//       return const Center(
-//         child: CircularProgressIndicator(),
-//       );
-//     }
-
-//     return Card(
-//       elevation: 4.0,
-//       margin: const EdgeInsets.all(8.0),
-//       child: Padding(
-//         padding: const EdgeInsets.all(16.0),
-//         child: Form(
-//           key: _formKey,
-//           child: Column(
-//             crossAxisAlignment: CrossAxisAlignment.start,
-//             children: [
-//               Text(
-//                 'Apply for Membership Card',
-//                 style: GoogleFonts.poppins(
-//                   fontSize: 20,
-//                   fontWeight: FontWeight.bold,
-//                 ),
-//               ),
-//               const SizedBox(height: 16),
-              
-//               // Membership Type
-//               DropdownButtonFormField<String>(
-//                 decoration: const InputDecoration(
-//                   labelText: 'Membership Type',
-//                   border: OutlineInputBorder(),
-//                 ),
-//                 value: _selectedMembershipType,
-//                 validator: (value) {
-//                   if (value == null || value.isEmpty) {
-//                     return 'Please select a membership type';
-//                   }
-//                   return null;
-//                 },
-//                 items: _membershipTypes.map((type) {
-//                   return DropdownMenuItem<String>(
-//                     value: type['name'],
-//                     child: Text('${type['name']} - Rs. ${type['amount']}'),
-//                   );
-//                 }).toList(),
-//                 onChanged: (value) {
-//                   setState(() {
-//                     _selectedMembershipType = value;
-//                     _updatePaidAmount(value!);
-//                   });
-//                 },
-//               ),
-//               const SizedBox(height: 16),
-              
-//               // Paid Amount
-//               TextFormField(
-//                 controller: _paidAmountController,
-//                 decoration: const InputDecoration(
-//                   labelText: 'Paid Amount (Rs.)',
-//                   border: OutlineInputBorder(),
-//                 ),
-//                 keyboardType: TextInputType.number,
-//                 validator: (value) {
-//                   if (value == null || value.isEmpty) {
-//                     return 'Please enter paid amount';
-//                   }
-//                   if (double.tryParse(value) == null) {
-//                     return 'Please enter a valid amount';
-//                   }
-//                   return null;
-//                 },
-//               ),
-//               const SizedBox(height: 16),
-              
-//               // Payment Slip
-//               Column(
-//                 crossAxisAlignment: CrossAxisAlignment.start,
-//                 children: [
-//                   Text(
-//                     'Payment Slip',
-//                     style: GoogleFonts.poppins(
-//                       fontSize: 16,
-//                     ),
-//                   ),
-//                   const SizedBox(height: 8),
-//                   _paymentSlip != null
-//                       ? Stack(
-//                           alignment: Alignment.topRight,
-//                           children: [
-//                             Container(
-//                               height: 200,
-//                               width: double.infinity,
-//                               decoration: BoxDecoration(
-//                                 border: Border.all(color: Colors.grey),
-//                                 borderRadius: BorderRadius.circular(8),
-//                               ),
-//                               child: Image.file(
-//                                 _paymentSlip!,
-//                                 fit: BoxFit.cover,
-//                               ),
-//                             ),
-//                             IconButton(
-//                               icon: const Icon(Icons.delete, color: Colors.red),
-//                               onPressed: () {
-//                                 setState(() {
-//                                   _paymentSlip = null;
-//                                 });
-//                               },
-//                             ),
-//                           ],
-//                         )
-//                       : InkWell(
-//                           onTap: _pickPaymentSlip,
-//                           child: Container(
-//                             height: 100,
-//                             width: double.infinity,
-//                             decoration: BoxDecoration(
-//                               border: Border.all(color: Colors.grey),
-//                               borderRadius: BorderRadius.circular(8),
-//                             ),
-//                             child: Column(
-//                               mainAxisAlignment: MainAxisAlignment.center,
-//                               children: [
-//                                 const Icon(Icons.cloud_upload, size: 40),
-//                                 const SizedBox(height: 8),
-//                                 Text(
-//                                   'Upload Payment Slip',
-//                                   style: GoogleFonts.poppins(),
-//                                 ),
-//                               ],
-//                             ),
-//                           ),
-//                         ),
-//                 ],
-//               ),
-//               const SizedBox(height: 24),
-              
-//               // Submit Button
-//               SizedBox(
-//                 width: double.infinity,
-//                 child: ElevatedButton(
-//                   onPressed: () {
-//                     if (_formKey.currentState!.validate()) {
-//                       if (_paymentSlip == null) {
-//                         ScaffoldMessenger.of(context).showSnackBar(
-//                           const SnackBar(
-//                             content: Text('Please upload payment slip'),
-//                           ),
-//                         );
-//                         return;
-//                       }
-                      
-//                       widget.onSubmit({
-//                         'membershipType': _selectedMembershipType,
-//                         'paidAmount': _paidAmountController.text,
-//                         'paymentSlip': _paymentSlip,
-//                       });
-//                     }
-//                   },
-//                   style: ElevatedButton.styleFrom(
-//                     padding: const EdgeInsets.symmetric(vertical: 16),
-//                     backgroundColor: Theme.of(context).primaryColor,
-//                   ),
-//                   child: Text(
-//                     'Submit Application',
-//                     style: GoogleFonts.poppins(
-//                       color: Colors.white,
-//                       fontWeight: FontWeight.bold,
-//                     ),
-//                   ),
-//                 ),
-//               ),
-//             ],
-//           ),
-//         ),
-//       ),
-//     );
-//   }
-// }
