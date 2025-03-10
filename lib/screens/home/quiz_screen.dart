@@ -12,6 +12,9 @@ class QuizScreen extends ConsumerWidget {
 
   // Handle back button behavior
   Future<bool> _onWillPop(BuildContext context, QuizController controller) async {
+
+
+    
     if (await controller.canGoBack()) {
       controller.goBack();
       return false;
