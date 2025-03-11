@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 void main() {
   runApp(
-    // const EMSApp());
+    
      ProviderScope(
       child: EMSApp(),
     ),
@@ -19,6 +19,7 @@ class EMSApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'EMS Enrollment',
       theme: ThemeData(
         primarySwatch: Colors.blue,

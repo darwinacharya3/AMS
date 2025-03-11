@@ -56,7 +56,8 @@ class CustomNavigation {
           break;
         case 'Logout':
           _handleLogout(context);
-          break;
+           break;
+         
       }
     });
   }

@@ -8,12 +8,7 @@ class MembershipCardDisplay extends StatefulWidget {
   final Map<String, dynamic> cardData;
   final List<Map<String, dynamic>>? membershipTypes;
 
-  const MembershipCardDisplay({
-    Key? key, 
-    required this.cardData,
-    this.membershipTypes,
-  }) : super(key: key);
-
+  const MembershipCardDisplay({super.key, required this.cardData, this.membershipTypes});
   @override
   State<MembershipCardDisplay> createState() => _MembershipCardDisplayState();
 }

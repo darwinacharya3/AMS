@@ -8,12 +8,7 @@ class MembershipForm extends StatefulWidget {
   final Function onSubmit;
   final List<Map<String, dynamic>>? membershipTypes;
 
-  const MembershipForm({
-    Key? key,
-    required this.onSubmit,
-    this.membershipTypes,
-  }) : super(key: key);
-
+  const MembershipForm({super.key, required this.onSubmit, this.membershipTypes});
   @override
   State<MembershipForm> createState() => _MembershipFormState();
 }

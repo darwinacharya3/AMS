@@ -16,9 +16,12 @@ class CareerScreen extends ConsumerWidget {
       controller.goBack();
       return false;
     } else {
-      Navigator.of(context).pushReplacement(
+      (mounted) {
+        Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => const DashboardScreen()),
       );
+      };
+      
       return false;
     }
   }

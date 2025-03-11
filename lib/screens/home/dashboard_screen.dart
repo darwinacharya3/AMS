@@ -124,90 +124,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 }
 
-  // Future<void> _loadData() async {
-  //   try {
-  //     setState(() {
-  //       _isLoading = true;
-  //       _error = null;
-  //     });
 
-  //     // Get credentials from secure storage
-  //     final email = await SecureStorageService.getUserEmail();
-  //     final password = await SecureStorageService.getUserPassword();
-      
-  //     debugPrint('Retrieved email from storage: $email');
-
-  //     if (email == null || password == null) {
-  //       throw Exception('Stored credentials not found');
-  //     }
-      
-  //     // Use the secure login endpoint
-  //     final loginUrl = 'https://extratech.extratechweb.com/api/auth/login';
-  //     debugPrint('Making API request to: $loginUrl');
-
-  //     final loginResponse = await http.post(
-  //       Uri.parse(loginUrl),
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //         'Accept': 'application/json',
-  //       },
-  //       body: json.encode({
-  //         'email': email,
-  //         'password': password
-  //       }),
-  //     );
-      
-
-  //     debugPrint('API Response Status Code: ${loginResponse.statusCode}');
-  //     if (loginResponse.statusCode == 200) {
-  //       // Successfully logged in
-  //       final responseData = json.decode(loginResponse.body);
-  //       print('Login response: $responseData');
-  //     }
-
-  //     if (loginResponse.statusCode == 200) {
-  //       final Map<String, dynamic> data = json.decode(loginResponse.body);
-  //       if (mounted) {
-  //         setState(() {
-  //           _userDetail = UserDetail.fromJson(data);
-            
-  //           // Parse countries and states if they're included in the response
-  //           _countries = (data['countries'] as List?)
-  //               ?.map((country) => Country.fromJson(country))
-  //               .toList() ?? [];
-                
-  //           _states = (data['states'] as List?)
-  //               ?.map((state) => StateModel.fromJson(state))
-  //               .toList() ?? [];
-                
-  //           _isLoading = false;
-  //         });
-  //       }
-  //     } else {
-  //       // Handle various error responses
-  //       if (loginResponse.statusCode == 401) {
-  //         throw Exception('Invalid credentials. Please log in again.');
-  //       } else if (loginResponse.statusCode == 403) {
-  //         throw Exception('Access denied. You may not have permission to view this information.');
-  //       } else {
-  //         throw Exception('Authentication failed: ${loginResponse.statusCode}');
-  //       }
-  //     }
-  //   } catch (e) {
-  //     debugPrint('Error in _loadData: $e');
-  //     if (mounted) {
-  //       setState(() {
-  //         // Provide more specific error message based on the exception
-  //         if (e.toString().contains('credentials not found')) {
-  //           _error = 'Your login session has expired. Please log in again.';
-  //         } else {
-  //           _error = 'Unable to load your information. Please try again later.';
-  //         }
-  //         _isLoading = false;
-  //       });
-  //     }
-  //   }
-  // }
 
   Future<bool> _onWillPop() async {
     if (_lastBackPressed == null ||
@@ -230,7 +147,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
     if (item == 'Logout') {
       SecureStorageService.clearCredentials().then((_) {
-        CustomNavigation.navigateToScreen(item, context);
+        if(mounted){
+          CustomNavigation.navigateToScreen(item, context);
+        }
+        
       });
     } else {
       CustomNavigation.navigateToScreen(item, context);
@@ -365,8 +285,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: _onWillPop,
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop){
+        if (didPop) return;
+        _onWillPop;
+      },
+      
       child: Scaffold(
         backgroundColor: Colors.grey[50],
         appBar: CustomAppBar(
