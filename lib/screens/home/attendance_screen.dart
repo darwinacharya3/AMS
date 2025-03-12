@@ -8,7 +8,7 @@ import 'package:ems/widgets/custom_widgets/custom_app_bar.dart';
 import 'package:ems/widgets/custom_widgets/custom_navigation.dart';
 
 class AttendanceScreen extends ConsumerWidget {
-  const AttendanceScreen({Key? key}) : super(key: key);
+  const AttendanceScreen({super.key});
 
   // Handle back button behavior
   Future<bool> _onWillPop(BuildContext context, AttendanceController controller) async {
