@@ -21,7 +21,7 @@ class CountryService {
       String? email = await SecureStorageService.getUserEmail();
       String? password = await SecureStorageService.getUserPassword();
       
-      if (email == null || password == null) {
+      if (password == null) {
         throw Exception('User credentials not found');
       }
 

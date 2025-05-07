@@ -11,10 +11,6 @@ class MembershipCardService {
   static Future<Map<String, dynamic>> getRawMembershipData() async {
     try {
       String? token = await SecureStorageService.getToken();
-      
-      if (token == null) {
-        throw Exception('Authentication token not found');
-      }
 
       final response = await http.get(
         Uri.parse('$baseUrl/student/membership-detail'),
@@ -40,10 +36,6 @@ class MembershipCardService {
   static Future<Map<String, dynamic>?> getMembershipCard() async {
     try {
       String? token = await SecureStorageService.getToken();
-      
-      if (token == null) {
-        throw Exception('Authentication token not found');
-      }
 
       final response = await http.get(
         Uri.parse('$baseUrl/student/membership-detail'),
@@ -72,10 +64,6 @@ class MembershipCardService {
   static Future<List<Map<String, dynamic>>> getMembershipTypes() async {
     try {
       String? token = await SecureStorageService.getToken();
-      
-      if (token == null) {
-        throw Exception('Authentication token not found');
-      }
 
       // Use the correct endpoint from Postman
       final response = await http.get(
@@ -108,10 +96,6 @@ class MembershipCardService {
   static Future<bool> submitMembershipApplication(Map<String, dynamic> formData) async {
     try {
       String? token = await SecureStorageService.getToken();
-      
-      if (token == null) {
-        throw Exception('Authentication token not found');
-      }
 
       // Create form data for multipart request (for file upload)
       var request = http.MultipartRequest(

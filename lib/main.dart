@@ -1,8 +1,9 @@
 // import 'package:ems/screens/enrollment/enrollment_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'screens/enrollment/enrollment_screen.dart';
+// import 'screens/AMS/enrollment/enrollment_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ems/screens/welcome/welcome_screen.dart';
 // import 'package:ems/screens/sign_in/signin_screen.dart';
 // import 'package:ems/screens/create_membership_card/general_membership_card.dart';
 
@@ -27,7 +28,7 @@ class EMSApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: EnrollmentScreen(),
+      home: SelectionScreen(),
       // home: GeneralMembershipCard(),
     );
   }
