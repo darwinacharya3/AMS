@@ -114,7 +114,7 @@ class _AllTicketsScreenState extends State<AllTicketsScreen> {
       child: Scaffold(
         appBar: const CustomAppBar(
           title: 'All Tickets',
-          icon: Icons.list_alt,
+          // icon: Icons.list_alt,
           showBackButton: true,
         ),
         endDrawer: DashboardDrawer(

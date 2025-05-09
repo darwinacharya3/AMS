@@ -114,7 +114,7 @@ class _CompletedTicketsScreenState extends State<CompletedTicketsScreen> {
       child: Scaffold(
         appBar: const CustomAppBar(
           title: 'Completed Tickets',
-          icon: Icons.check_circle_outline,
+          // icon: Icons.check_circle_outline,
           showBackButton: true,
         ),
         endDrawer: DashboardDrawer(

@@ -112,7 +112,7 @@ class _ZoomLinksScreenState extends State<ZoomLinksScreen> {
       child: Scaffold(
         appBar: const CustomAppBar(
           title: 'Zoom Links',
-          icon: Icons.videocam,
+          // icon: Icons.videocam,
           showBackButton: true, // Explicitly show back button
         ),
         endDrawer: DashboardDrawer(

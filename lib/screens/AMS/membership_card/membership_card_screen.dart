@@ -134,10 +134,10 @@ class _MembershipCardScreenState extends State<MembershipCardScreen> {
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
-        backgroundColor: Colors.pink[50],
+        backgroundColor: Colors.white,
         appBar: CustomAppBar(
           title: 'Membership Card',
-          icon: Icons.card_membership_outlined,
+          // icon: Icons.card_membership_outlined,
           showBackButton: true,
         ),
         endDrawer: DashboardDrawer(
@@ -156,9 +156,9 @@ class _MembershipCardScreenState extends State<MembershipCardScreen> {
                   Text(
                     'Membership Card',
                     style: GoogleFonts.poppins(
-                      fontSize: 24,
+                      fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+                      color: Color(0xFF111213),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -166,15 +166,15 @@ class _MembershipCardScreenState extends State<MembershipCardScreen> {
                     'View your membership details or apply for a new membership card.',
                     style: GoogleFonts.poppins(
                       fontSize: 14,
-                      color: Colors.grey[700],
+                      color: Color(0xFFA1A1A1),
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
                   
                   if (_isLoading)
                     Center(
                       child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.pink[700]!),
+                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF205EB5)),
                       ),
                     )
                   else if (_errorMessage != null)
@@ -201,7 +201,7 @@ class _MembershipCardScreenState extends State<MembershipCardScreen> {
                           ElevatedButton(
                             onPressed: _checkMembershipCard,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.pink[700],
+                              backgroundColor: Color(0xFF205EB5),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(20),
                               ),

@@ -100,16 +100,16 @@ class _MembershipFormState extends State<MembershipForm> {
               Text(
                 'Select Payment Slip',
                 style: GoogleFonts.poppins(
-                  fontSize: 20,
+                  fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: Colors.deepPurple[800],
+                  color: Color(0xFF205EB5),
                 ),
               ),
               const SizedBox(height: 16),
               ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: Colors.deepPurple[100],
-                  child: Icon(Icons.camera_alt, color: Colors.deepPurple[800]),
+                  backgroundColor: Colors.white,
+                  child: Icon(Icons.camera_alt, color: Color(0xFF205EB5)),
                 ),
                 title: Text('Take Photo', style: GoogleFonts.poppins()),
                 onTap: () {
@@ -120,8 +120,8 @@ class _MembershipFormState extends State<MembershipForm> {
               const SizedBox(height: 8),
               ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: Colors.deepPurple[100],
-                  child: Icon(Icons.photo_library, color: Colors.deepPurple[800]),
+                  backgroundColor: Colors.white,
+                  child: Icon(Icons.photo_library, color: Color(0xFF205EB5)),
                 ),
                 title: Text('Choose from Gallery', style: GoogleFonts.poppins()),
                 onTap: () {
@@ -215,25 +215,25 @@ class _MembershipFormState extends State<MembershipForm> {
               Text(
                 'Apply for Membership Card',
                 style: GoogleFonts.poppins(
-                  fontSize: 24,
+                  fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+                  color: Color(0xFF111213),
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
               
               // Membership Type
               Text(
                 'Membership Type',
                 style: GoogleFonts.poppins(
                   fontSize: 16,
-                  color: Colors.deepPurple[800],
+                  color: Color(0xFF205EB5),
                 ),
               ),
               const SizedBox(height: 8),
               Container(
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.deepPurple.shade200),
+                  border: Border.all(color: Color(0xFF205EB5)),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: DropdownButtonFormField<int>(
@@ -247,7 +247,7 @@ class _MembershipFormState extends State<MembershipForm> {
                     fillColor: Colors.transparent,
                     hintText: 'Select membership type',
                     hintStyle: GoogleFonts.poppins(
-                      color: Colors.grey[600],
+                      color: Color(0xFFA1A1A1),
                     ),
                   ),
                   value: _selectedMembershipTypeId,
@@ -276,7 +276,7 @@ class _MembershipFormState extends State<MembershipForm> {
                   },
                   icon: Icon(
                     Icons.arrow_drop_down,
-                    color: Colors.deepPurple[800],
+                    color: Color(0xFF205EB5),
                   ),
                   dropdownColor: Colors.white,
                   isExpanded: true,
@@ -289,7 +289,7 @@ class _MembershipFormState extends State<MembershipForm> {
                 'Paid Amount (AUD/NPR)',
                 style: GoogleFonts.poppins(
                   fontSize: 16,
-                  color: Colors.deepPurple[800],
+                  color: Color(0xFF205EB5),
                 ),
               ),
               const SizedBox(height: 8),
@@ -301,15 +301,15 @@ class _MembershipFormState extends State<MembershipForm> {
                   fillColor: Colors.grey[100],
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Colors.deepPurple.shade200),
+                    borderSide: BorderSide(color: Color(0xFF205EB5)),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Colors.deepPurple.shade200),
+                    borderSide: BorderSide(color: Color(0xFF205EB5)),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Colors.deepPurple.shade400),
+                    borderSide: BorderSide(color: Color(0xFF205EB5)),
                   ),
                   hintStyle: GoogleFonts.poppins(),
                 ),
@@ -325,14 +325,14 @@ class _MembershipFormState extends State<MembershipForm> {
                   return null;
                 },
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 26),
               
               // Payment Slip
               Text(
                 'Payment Slip',
                 style: GoogleFonts.poppins(
                   fontSize: 16,
-                  color: Colors.deepPurple[800],
+                  color: Color(0xFF205EB5),
                 ),
               ),
               const SizedBox(height: 8),
@@ -344,7 +344,7 @@ class _MembershipFormState extends State<MembershipForm> {
                           height: 200,
                           width: double.infinity,
                           decoration: BoxDecoration(
-                            border: Border.all(color: Colors.deepPurple.shade200),
+                            border: Border.all(color: Color(0xFF205EB5)),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: ClipRRect(
@@ -380,7 +380,7 @@ class _MembershipFormState extends State<MembershipForm> {
                         height: 150,
                         width: double.infinity,
                         decoration: BoxDecoration(
-                          border: Border.all(color: Colors.deepPurple.shade200),
+                          border: Border.all(color: Color(0xFF205EB5)),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Column(
@@ -389,20 +389,20 @@ class _MembershipFormState extends State<MembershipForm> {
                             Icon(
                               Icons.photo_library,
                               size: 48,
-                              color: Colors.deepPurple[400],
+                              color: Color(0xFF205EB5),
                             ),
                             const SizedBox(height: 16),
                             Text(
                               'Upload Payment Slip',
                               style: GoogleFonts.poppins(
-                                color: Colors.deepPurple[800],
+                                color: Color(0xFF205EB5),
                               ),
                             ),
                             const SizedBox(height: 4),
                             Text(
                               'Take a photo or choose from gallery',
                               style: GoogleFonts.poppins(
-                                color: Colors.grey[600],
+                                color: Color(0xFFA1A1A1),
                                 fontSize: 12,
                               ),
                             ),
@@ -419,7 +419,7 @@ class _MembershipFormState extends State<MembershipForm> {
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _submitForm,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.deepPurple[600],
+                    backgroundColor: Color(0xFF205EB5),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(25),
                     ),

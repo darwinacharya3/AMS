@@ -13,13 +13,13 @@ class PassportCopiesWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.all(16),
+      margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Color(0xFFA1A1A1).withOpacity(0.25),
             spreadRadius: 1,
             blurRadius: 5,
           ),
@@ -38,12 +38,13 @@ class PassportCopiesWidget extends StatelessWidget {
 
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(10),
       child: Text(
         'Passport Copies',
         style: GoogleFonts.poppins(
-          fontSize: 20,
+          fontSize: 18,
           fontWeight: FontWeight.bold,
+          color: const Color(0xFF111213)
         ),
       ),
     );
@@ -52,13 +53,12 @@ class PassportCopiesWidget extends StatelessWidget {
   Widget _buildSubHeader() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      color: Colors.blue[50],
+      padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Text(
         'Click on file to see larger size.',
         style: GoogleFonts.poppins(
           fontSize: 16,
-          color: const Color.fromARGB(255, 227, 10, 169),
+          color: const Color(0xFF205EB5),
           fontWeight: FontWeight.w500,
         ),
       ),
@@ -76,7 +76,7 @@ class PassportCopiesWidget extends StatelessWidget {
             'No passport images available',
             style: GoogleFonts.poppins(
               fontSize: 16,
-              color: Colors.grey[600],
+              color: Color(0xFFA1A1A1),
             ),
           ),
         ),
@@ -157,6 +157,7 @@ class PassportCopiesWidget extends StatelessWidget {
                       style: GoogleFonts.poppins(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
+                        color : const Color(0xFF111213)
                       ),
                     ),
                     IconButton(
@@ -183,7 +184,7 @@ class PassportCopiesWidget extends StatelessWidget {
                               ? loadingProgress.cumulativeBytesLoaded /
                                   loadingProgress.expectedTotalBytes!
                               : null,
-                          color: const Color.fromARGB(255, 227, 10, 169),
+                          color: const Color(0xFF205EB5),
                         ),
                       );
                     },
@@ -194,13 +195,13 @@ class PassportCopiesWidget extends StatelessWidget {
                           const Icon(
                             Icons.broken_image,
                             size: 64,
-                            color: Colors.grey,
+                            color: Color(0xFFA1A1A1),
                           ),
                           const SizedBox(height: 16),
                           Text(
                             'Unable to load image',
                             style: GoogleFonts.poppins(
-                              color: Colors.grey[700],
+                              color: Color(0xFFA1A1A1),
                             ),
                           ),
                         ],

@@ -112,7 +112,7 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
       child: Scaffold(
         appBar: const CustomAppBar(
           title: 'Materials',
-          icon: Icons.library_books,
+          // icon: Icons.library_books,
           showBackButton: true, // Explicitly show back button
         ),
         endDrawer: DashboardDrawer(

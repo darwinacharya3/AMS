@@ -1,3 +1,4 @@
+import 'package:ems/screens/welcome/welcome_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'dart:async';
@@ -13,7 +14,7 @@ import 'package:ems/screens/AMS/zoom_link/zoom_link_screen.dart';
 import 'package:ems/screens/AMS/tickets/all_tickets_screen.dart';
 import 'package:ems/screens/AMS/tickets/completed_tickets_screen.dart';
 import 'package:ems/screens/AMS/tickets/create_ticket_screen.dart';
-import 'package:ems/screens/AMS/enrollment/enrollment_screen.dart';
+// import 'package:ems/screens/AMS/enrollment/enrollment_screen.dart';
 import 'package:ems/screens/AMS/home/dashboard_screen.dart';
 
 class CustomNavigation {
@@ -94,7 +95,7 @@ class CustomNavigation {
       }
       
       // Navigate to enrollment screen
-      Get.offAll(() => const EnrollmentScreen(), transition: Transition.fade);
+      Get.offAll(() => const SelectionScreen() , transition: Transition.fade);
     } catch (e) {
       // If anything goes wrong, still clear local storage and redirect
       await SecureStorageService.clearCredentials();
@@ -103,7 +104,7 @@ class CustomNavigation {
         Navigator.of(context).pop(); // Close dialog
       }
       
-      Get.offAll(() => const EnrollmentScreen(), transition: Transition.fade);
+      Get.offAll(() => const SelectionScreen() , transition: Transition.fade);
     }
   }
   

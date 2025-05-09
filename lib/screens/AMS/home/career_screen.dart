@@ -138,7 +138,7 @@ class _CareerScreenState extends State<CareerScreen> {
       child: Scaffold(
         appBar: const CustomAppBar(
           title: 'Career',
-          icon: Icons.work,
+          // icon: Icons.work,
           showBackButton: true, // Explicitly show back button
         ),
         endDrawer: DashboardDrawer(

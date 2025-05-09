@@ -140,7 +140,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       child: Scaffold(
         appBar: const CustomAppBar(
           title: 'Attendance',
-          icon: Icons.calendar_today,
+          // icon: Icons.calendar_today,
           showBackButton: true, // Explicitly show back button
         ),
         endDrawer: DashboardDrawer(

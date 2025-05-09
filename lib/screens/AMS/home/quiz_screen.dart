@@ -138,7 +138,7 @@ class _QuizScreenState extends State<QuizScreen> {
       child: Scaffold(
         appBar: const CustomAppBar(
           title: 'Quiz',
-          icon: Icons.quiz,
+          // icon: Icons.quiz,
           showBackButton: true, // Explicitly show back button
         ),
         endDrawer: DashboardDrawer(

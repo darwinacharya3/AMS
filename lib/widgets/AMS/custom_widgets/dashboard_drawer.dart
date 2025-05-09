@@ -19,7 +19,7 @@ class DashboardDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Drawer(
-      backgroundColor: Colors.blue,
+      backgroundColor: Color(0xFF205EB5),
       child: Column(
         children: [
           const SizedBox(height: 80),
@@ -81,7 +81,7 @@ class DashboardDrawer extends StatelessWidget {
           fontWeight: FontWeight.w500,
         ),
       ),
-      backgroundColor: Colors.blue,
+      backgroundColor: Color(0xFF205EB5),
       collapsedIconColor: Colors.white,
       iconColor: Colors.white,
       initiallyExpanded: isExpanded,
@@ -94,16 +94,16 @@ class DashboardDrawer extends StatelessWidget {
     
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
-      color: isSelected ? Colors.white : Colors.blue,
+      color: isSelected ? Colors.white : Color(0xFF205EB5),
       child: ListTile(
         leading: Icon(
           icon,
-          color: isSelected ? Colors.blue : Colors.white,
+          color: isSelected ? Color(0xFF205EB5) : Colors.white,
         ),
         title: Text(
           title,
           style: GoogleFonts.inter(
-            color: isSelected ? Colors.blue : Colors.white,
+            color: isSelected ? Color(0xFF205EB5) : Colors.white,
             fontSize: 16,
             fontWeight: FontWeight.w500,
           ),
@@ -121,17 +121,17 @@ class DashboardDrawer extends StatelessWidget {
     
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
-      color: isSelected ? Colors.blue[50] : Colors.blue,
+      color: isSelected ? Colors.blue[50] : Color(0xFF205EB5),
       child: ListTile(
         leading: Icon(
           icon,
-          color: isSelected ? Colors.blue : Colors.white,
+          color: isSelected ? Color(0xFF205EB5) : Colors.white,
           size: 24,
         ),
         title: Text(
           title,
           style: GoogleFonts.inter(
-            color: isSelected ? Colors.blue : Colors.white,
+            color: isSelected ? Color(0xFF205EB5) : Colors.white,
             fontSize: 16,
             fontWeight: FontWeight.w400,
           ),

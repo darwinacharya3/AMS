@@ -296,7 +296,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         backgroundColor: Colors.grey[50],
         appBar: CustomAppBar(
           title: _selectedItem,
-          icon: Icons.person,
+          // icon: Icons.person,
           showBackButton: false,
         ),
         endDrawer: DashboardDrawer(

@@ -114,7 +114,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
       child: Scaffold(
         appBar: const CustomAppBar(
           title: 'Create Tickets',
-          icon: Icons.add_circle_outline,
+          // icon: Icons.add_circle_outline,
           showBackButton: true,
         ),
         endDrawer: DashboardDrawer(

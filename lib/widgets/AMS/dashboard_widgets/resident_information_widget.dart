@@ -36,14 +36,14 @@ class ResidentialInformationWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.all(16),
+      margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
+            color: Color(0xFFA1A1A1).withOpacity(0.25),
+            spreadRadius: 0.5,
             blurRadius: 5,
           ),
         ],
@@ -62,12 +62,13 @@ class ResidentialInformationWidget extends StatelessWidget {
 
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(10),
       child: Text(
         'Current Residential Information',
         style: GoogleFonts.poppins(
-          fontSize: 20,
+          fontSize: 18,
           fontWeight: FontWeight.bold,
+          color : const Color(0xFF111213)
         ),
       ),
     );
@@ -76,13 +77,12 @@ class ResidentialInformationWidget extends StatelessWidget {
   Widget _buildSubHeader() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      color: Colors.blue[50],
+      padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Text(
         'Residential information',
         style: GoogleFonts.poppins(
           fontSize: 16,
-          color: const Color.fromARGB(255, 227, 10, 169),
+          color: const Color(0xFF205EB5),
           fontWeight: FontWeight.w500,
         ),
       ),
@@ -91,7 +91,7 @@ class ResidentialInformationWidget extends StatelessWidget {
 
    Widget _buildPermanentResidenceQuestion() {
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -100,6 +100,7 @@ class ResidentialInformationWidget extends StatelessWidget {
             style: GoogleFonts.poppins(
               fontSize: 16,
               fontWeight: FontWeight.w500,
+              color: const Color(0xFF111213)
             ),
           ),
           const SizedBox(height: 8),
@@ -107,7 +108,7 @@ class ResidentialInformationWidget extends StatelessWidget {
             userDetail.isAusPermanentResident == '1' ? 'Yes' : 'No',
             style: GoogleFonts.poppins(
               fontSize: 16,
-              color: Colors.grey[600],
+              color: Color(0xFFA1A1A1),
             ),
           ),
         ],
@@ -117,7 +118,7 @@ class ResidentialInformationWidget extends StatelessWidget {
 
    Widget _buildResidentialInfo() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
       child: Column(
         children: [
           _buildInfoRow(
@@ -163,12 +164,12 @@ class ResidentialInformationWidget extends StatelessWidget {
 
   Widget _buildInfoRow(IconData icon, String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
           Icon(
             icon,
-            color: const Color.fromARGB(255, 227, 10, 169),
+            color: const Color(0xFF205EB5),
             size: 24,
           ),
           const SizedBox(width: 16),
@@ -181,6 +182,7 @@ class ResidentialInformationWidget extends StatelessWidget {
                   style: GoogleFonts.poppins(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
+                    color: const Color(0xFF111213)
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -188,7 +190,7 @@ class ResidentialInformationWidget extends StatelessWidget {
                   value,
                   style: GoogleFonts.poppins(
                     fontSize: 16,
-                    color: Colors.grey[600],
+                    color: Color(0xFFA1A1A1),
                   ),
                 ),
               ],

@@ -13,13 +13,13 @@ class EmergencyContactWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.all(16),
+      margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Color(0xFFA1A1A1).withOpacity(0.25),
             spreadRadius: 1,
             blurRadius: 5,
           ),
@@ -38,12 +38,13 @@ class EmergencyContactWidget extends StatelessWidget {
 
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(10),
       child: Text(
         'Emergency Contact',
         style: GoogleFonts.poppins(
-          fontSize: 20,
+          fontSize: 18,
           fontWeight: FontWeight.bold,
+          color: const Color(0xFF111213)
         ),
       ),
     );
@@ -52,13 +53,13 @@ class EmergencyContactWidget extends StatelessWidget {
   Widget _buildSubHeader() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      color: Colors.blue[50],
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+  
       child: Text(
         'Emergency contact of student',
         style: GoogleFonts.poppins(
           fontSize: 16,
-          color: const Color.fromARGB(255, 227, 10, 169),
+          color: Color(0xFF205EB5),
           fontWeight: FontWeight.w500,
         ),
       ),
@@ -67,7 +68,7 @@ class EmergencyContactWidget extends StatelessWidget {
 
   Widget _buildEmergencyContactInfo() {
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
       child: Column(
         children: [
           _buildInfoRow(
@@ -92,12 +93,12 @@ class EmergencyContactWidget extends StatelessWidget {
 
   Widget _buildInfoRow(IconData icon, String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
           Icon(
             icon,
-            color: const Color.fromARGB(255, 227, 10, 169),
+            color: const Color(0xFF205EB5),
             size: 24,
           ),
           const SizedBox(width: 16),
@@ -110,6 +111,7 @@ class EmergencyContactWidget extends StatelessWidget {
                   style: GoogleFonts.poppins(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
+                    color: const Color(0xFF111213)
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -117,7 +119,7 @@ class EmergencyContactWidget extends StatelessWidget {
                   value,
                   style: GoogleFonts.poppins(
                     fontSize: 16,
-                    color: Colors.grey[600],
+                    color: Color(0xFFA1A1A1),
                   ),
                 ),
               ],

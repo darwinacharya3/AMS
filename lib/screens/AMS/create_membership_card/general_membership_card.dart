@@ -46,10 +46,10 @@ class _GeneralMembershipCardState extends State<GeneralMembershipCard> {
   String _errorMessage = '';
 
   // Colors
-  final Color _primaryColor = const Color(0xFFE94E96); // Pink color 
+  final Color _primaryColor = const Color(0XFFE52596); // Pink color 
   final Color _backgroundColor = const Color(0xFFFAE1EC); // Light pink background
   final Color _cardColor = Colors.white;
-  final Color _textColor = Colors.black87;
+  final Color _textColor = Color(0xFF111213); // Dark text color
   final Color _accentColor = const Color(0xFF4CAF50); // Green for active status
 
   @override

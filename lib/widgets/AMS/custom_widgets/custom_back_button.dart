@@ -10,7 +10,7 @@ class CustomBackButton extends StatelessWidget {
 
   const CustomBackButton({
     super.key,
-    this.iconColor = const Color.fromARGB(255, 227, 10, 169),
+    this.iconColor = const Color(0xFFE52596),
     this.iconSize = 24.0,
     this.padding = const EdgeInsets.all(8.0),
     this.onPressed,
