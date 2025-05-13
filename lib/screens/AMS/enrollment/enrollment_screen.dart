@@ -74,7 +74,7 @@ class _EnrollmentScreenState extends State<EnrollmentScreen> {
 
   void _navigateBackToSelectionScreen() {
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (context) => SelectionScreen()),
+      MaterialPageRoute(builder: (context) => HomeScreen()),
       (Route<dynamic> route) => false,
     );
   }

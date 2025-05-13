@@ -51,6 +51,9 @@ dependencies:
   intl: ^0.20.2
   http_parser: ^4.1.2
   flutter_svg: ^2.0.17
+  carousel_slider: ^5.0.0
+  shimmer: ^3.0.0
+  cached_network_image: ^3.4.1
 
 dev_dependencies:
   flutter_test:
@@ -97,6 +100,14 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
       - assets/logo.png
+      - assets/extratech-oval-logo.png
+      - assets/AMS Icon.png
+      - assets/event-icon.png
+      - assets/member-icon.png
+      - assets/News Icon.png
+      - assets/Oval Logo.png
+      - assets/Settiing Icon.png
+
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 

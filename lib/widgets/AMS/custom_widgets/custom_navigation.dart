@@ -95,7 +95,7 @@ class CustomNavigation {
       }
       
       // Navigate to enrollment screen
-      Get.offAll(() => const SelectionScreen() , transition: Transition.fade);
+      Get.offAll(() => HomeScreen() , transition: Transition.fade);
     } catch (e) {
       // If anything goes wrong, still clear local storage and redirect
       await SecureStorageService.clearCredentials();
@@ -104,7 +104,7 @@ class CustomNavigation {
         Navigator.of(context).pop(); // Close dialog
       }
       
-      Get.offAll(() => const SelectionScreen() , transition: Transition.fade);
+      Get.offAll(() => const () , transition: Transition.fade);
     }
   }
   
