@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "772237323603",
+    "project_id": "extratech-6b6af",
+    "storage_bucket": "extratech-6b6af.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:772237323603:android:c93b82387533f9ed6e05a6",
+        "android_client_info": {
+          "package_name": "com.extratech.extratechams"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBRrZP1IXMWPzgeWKDUhQtF6x6RF6XVK50"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

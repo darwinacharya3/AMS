@@ -3,6 +3,8 @@ import 'package:ems/core/app_colors.dart';
 import 'package:ems/core/app_text_styles.dart';
 import '../../data/models/event_model.dart';
 import 'package:ems/screens/AMS/enrollment/enrollment_screen.dart';
+import 'package:ems/screens/extratech-oval/login/login_screen.dart';
+// import 'package:ems/screens/AMS/sign_in/signin_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -176,7 +178,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     // Extratech Oval Card - Now using the full logo image
                     Expanded(
                       child: GestureDetector(
-                        onTap: _showComingSoonMessage,
+                        onTap: (){
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => ExtratechOvalScreen()),
+                          );
+                        },
                         child: Container(
                           height: availableHeight * 0.18, // Proportional height
                           decoration: BoxDecoration(

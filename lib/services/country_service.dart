@@ -20,10 +20,6 @@ class CountryService {
       // Get stored credentials
       String? email = await SecureStorageService.getUserEmail();
       String? password = await SecureStorageService.getUserPassword();
-      
-      if (password == null) {
-        throw Exception('User credentials not found');
-      }
 
       // Make login request to get countries data
       final loginResponse = await http.post(
