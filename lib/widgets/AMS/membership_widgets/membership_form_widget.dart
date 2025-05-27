@@ -145,11 +145,31 @@ class _MembershipFormState extends State<MembershipForm> {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    // Get screen dimensions for responsive sizing
+    final size = MediaQuery.of(context).size;
+    final screenWidth = size.width;
+    final screenHeight = size.height;
+    
+    // Define responsive measurements
+    final double titleFontSize = screenWidth * 0.045;  // 4.5% of screen width
+    final double bodyFontSize = screenWidth * 0.035;   // 3.5% of screen width
+    final double labelFontSize = screenWidth * 0.04;   // 4% of screen width
+    final double hintFontSize = screenWidth * 0.035;   // 3.5% of screen width
+    final double buttonFontSize = screenWidth * 0.04;  // 4% of screen width
+    
+    final double verticalSpacing = screenHeight * 0.02;     // 2% of screen height
+    final double smallVerticalSpacing = screenHeight * 0.01; // 1% of screen height
+    final double horizontalPadding = screenWidth * 0.04;    // 4% of screen width
+    
+    final double inputFieldHeight = screenHeight * 0.06;     // 6% of screen height
+    final double buttonHeight = screenHeight * 0.055;        // 5.5% of screen height
     
     if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(),
+      return Center(
+        child: SizedBox(
+          height: screenHeight * 0.6,
+          child: const CircularProgressIndicator(),
+        ),
       );
     }
 
@@ -165,7 +185,7 @@ class _MembershipFormState extends State<MembershipForm> {
             child: Text(
               'Student Membership Registration',
               style: GoogleFonts.poppins(
-                fontSize: 18,
+                fontSize: titleFontSize,
                 fontWeight: FontWeight.w600,
                 color: const Color(0xFF205EB5),
               ),
@@ -174,7 +194,7 @@ class _MembershipFormState extends State<MembershipForm> {
           
           // Divider
           Container(
-            margin: const EdgeInsets.symmetric(vertical: 8),
+            margin: EdgeInsets.symmetric(vertical: smallVerticalSpacing),
             width: double.infinity,
             height: 1,
             color: const Color(0xFFEEEEEE),
@@ -182,12 +202,12 @@ class _MembershipFormState extends State<MembershipForm> {
           
           // Description text area - Using hardcoded description for now
           Container(
-            width: screenWidth * 0.85,
-            margin: const EdgeInsets.only(bottom: 16),
+            width: screenWidth * 0.9,
+            margin: EdgeInsets.only(bottom: verticalSpacing),
             child: Text(
               _membershipDescription,
               style: GoogleFonts.poppins(
-                fontSize: 14,
+                fontSize: bodyFontSize,
                 color: Colors.black87,
               ),
             ),
@@ -195,8 +215,8 @@ class _MembershipFormState extends State<MembershipForm> {
           
           // Form area
           Container(
-            width: screenWidth * 0.9,
-            padding: const EdgeInsets.symmetric(horizontal: 10),
+            width: screenWidth,
+            padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
             child: Form(
               key: _formKey,
               child: Column(
@@ -206,25 +226,31 @@ class _MembershipFormState extends State<MembershipForm> {
                   Text(
                     'Membership Type',
                     style: GoogleFonts.poppins(
-                      fontSize: 16,
+                      fontSize: labelFontSize,
                       fontWeight: FontWeight.w500,
                       color: Colors.black87,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: smallVerticalSpacing),
                   Container(
+                    height: inputFieldHeight,
                     decoration: BoxDecoration(
                       border: Border.all(color: Colors.grey.shade300),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: DropdownButtonFormField<int>(
-                      decoration: const InputDecoration(
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12),
+                      decoration: InputDecoration(
+                        contentPadding: EdgeInsets.symmetric(horizontal: horizontalPadding),
                         border: InputBorder.none,
                       ),
-                      hint: Text('Select Membership', style: GoogleFonts.poppins()),
+                      hint: Text(
+                        'Select Membership', 
+                        style: GoogleFonts.poppins(fontSize: hintFontSize)
+                      ),
                       value: _selectedMembershipTypeId,
                       isExpanded: true,
+                      icon: Icon(Icons.arrow_drop_down, size: screenWidth * 0.06),
+                      itemHeight: screenHeight * 0.07,
                       validator: (value) {
                         if (value == null) {
                           return 'Please select a membership type';
@@ -236,7 +262,7 @@ class _MembershipFormState extends State<MembershipForm> {
                           value: type['id'],
                           child: Text(
                             '${type['type']} - ${type['currency']} ${type['amount']}',
-                            style: GoogleFonts.poppins(),
+                            style: GoogleFonts.poppins(fontSize: bodyFontSize),
                           ),
                         );
                       }).toList(),
@@ -250,62 +276,72 @@ class _MembershipFormState extends State<MembershipForm> {
                       },
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: verticalSpacing),
                   
                   // Paid Amount
                   Text(
                     'Paid Amount',
                     style: GoogleFonts.poppins(
-                      fontSize: 16,
+                      fontSize: labelFontSize,
                       fontWeight: FontWeight.w500,
                       color: Colors.black87,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: _paidAmountController,
-                    decoration: InputDecoration(
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-                      hintText: 'Enter the paid amount',
-                      hintStyle: GoogleFonts.poppins(color: Colors.grey),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(4),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
+                  SizedBox(height: smallVerticalSpacing),
+                  SizedBox(
+                    height: inputFieldHeight,
+                    child: TextFormField(
+                      controller: _paidAmountController,
+                      decoration: InputDecoration(
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: horizontalPadding, 
+                          vertical: smallVerticalSpacing
+                        ),
+                        hintText: 'Enter the paid amount',
+                        hintStyle: GoogleFonts.poppins(
+                          color: Colors.grey,
+                          fontSize: hintFontSize
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(4),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(4),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
                       ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(4),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
+                      keyboardType: TextInputType.number,
+                      style: GoogleFonts.poppins(fontSize: bodyFontSize),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter paid amount';
+                        }
+                        if (double.tryParse(value) == null) {
+                          return 'Please enter a valid amount';
+                        }
+                        return null;
+                      },
                     ),
-                    keyboardType: TextInputType.number,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter paid amount';
-                      }
-                      if (double.tryParse(value) == null) {
-                        return 'Please enter a valid amount';
-                      }
-                      return null;
-                    },
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: verticalSpacing),
                   
                   // Payment Slip
                   Text(
                     'Payment Slip',
                     style: GoogleFonts.poppins(
-                      fontSize: 16,
+                      fontSize: labelFontSize,
                       fontWeight: FontWeight.w500,
                       color: Colors.black87,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: smallVerticalSpacing),
                   Container(
                     decoration: BoxDecoration(
                       border: Border.all(color: Colors.grey.shade300),
                       borderRadius: BorderRadius.circular(4),
                     ),
-                    height: 45,
+                    height: inputFieldHeight,
                     child: Row(
                       children: [
                         // Choose File Button
@@ -319,12 +355,12 @@ class _MembershipFormState extends State<MembershipForm> {
                             child: InkWell(
                               onTap: () => _getPaymentSlip(ImageSource.gallery),
                               child: Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                padding: EdgeInsets.symmetric(vertical: smallVerticalSpacing),
                                 child: Text(
                                   'Choose File',
                                   textAlign: TextAlign.center,
                                   style: GoogleFonts.poppins(
-                                    fontSize: 14,
+                                    fontSize: bodyFontSize,
                                     color: Colors.black87,
                                   ),
                                 ),
@@ -339,14 +375,15 @@ class _MembershipFormState extends State<MembershipForm> {
                             child: InkWell(
                               onTap: () => _getPaymentSlip(ImageSource.camera),
                               child: Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                padding: EdgeInsets.symmetric(vertical: smallVerticalSpacing),
                                 child: Text(
                                   'Upload Payment Slip',
                                   textAlign: TextAlign.center,
                                   style: GoogleFonts.poppins(
-                                    fontSize: 14,
+                                    fontSize: bodyFontSize,
                                     color: Colors.black87,
                                   ),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ),
@@ -357,17 +394,17 @@ class _MembershipFormState extends State<MembershipForm> {
                   ),
                   // Show selected file name or preview
                   if (_paymentSlip != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8),
+                    Container(
+                      padding: EdgeInsets.only(top: smallVerticalSpacing),
                       child: Row(
                         children: [
-                          const Icon(Icons.check_circle, color: Colors.green, size: 16),
-                          const SizedBox(width: 8),
+                          Icon(Icons.check_circle, color: Colors.green, size: screenWidth * 0.04),
+                          SizedBox(width: screenWidth * 0.02),
                           Expanded(
                             child: Text(
                               'File selected: ${_paymentSlip!.path.split('/').last}',
                               style: GoogleFonts.poppins(
-                                fontSize: 12,
+                                fontSize: screenWidth * 0.03,
                                 color: Colors.green,
                               ),
                               maxLines: 1,
@@ -375,9 +412,9 @@ class _MembershipFormState extends State<MembershipForm> {
                             ),
                           ),
                           IconButton(
-                            icon: const Icon(Icons.close, size: 16),
+                            icon: Icon(Icons.close, size: screenWidth * 0.04),
                             padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
+                            constraints: BoxConstraints(),
                             onPressed: () {
                               setState(() {
                                 _paymentSlip = null;
@@ -387,41 +424,51 @@ class _MembershipFormState extends State<MembershipForm> {
                         ],
                       ),
                     ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: verticalSpacing),
                   
                   // Remarks
                   Text(
                     'Remarks',
                     style: GoogleFonts.poppins(
-                      fontSize: 16,
+                      fontSize: labelFontSize,
                       fontWeight: FontWeight.w500,
                       color: Colors.black87,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: _remarksController,
-                    decoration: InputDecoration(
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-                      hintText: 'Leave your message here...',
-                      hintStyle: GoogleFonts.poppins(color: Colors.grey),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(4),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
+                  SizedBox(height: smallVerticalSpacing),
+                  Container(
+                    height: screenHeight * 0.12, // Taller for remarks field
+                    child: TextFormField(
+                      controller: _remarksController,
+                      decoration: InputDecoration(
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: horizontalPadding, 
+                          vertical: verticalSpacing
+                        ),
+                        hintText: 'Leave your message here...',
+                        hintStyle: GoogleFonts.poppins(
+                          color: Colors.grey,
+                          fontSize: hintFontSize
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(4),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(4),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
                       ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(4),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
+                      style: GoogleFonts.poppins(fontSize: bodyFontSize),
+                      maxLines: 3,
                     ),
-                    maxLines: 3,
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: verticalSpacing * 1.2),
                   
                   // Register Now Button
                   SizedBox(
                     width: double.infinity,
-                    height: 45,
+                    height: buttonHeight,
                     child: ElevatedButton(
                       onPressed: _isLoading ? null : _submitForm,
                       style: ElevatedButton.styleFrom(
@@ -431,9 +478,9 @@ class _MembershipFormState extends State<MembershipForm> {
                         ),
                       ),
                       child: _isLoading
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
+                          ? SizedBox(
+                              width: screenWidth * 0.05,
+                              height: screenWidth * 0.05,
                               child: CircularProgressIndicator(
                                 color: Colors.white,
                                 strokeWidth: 2,
@@ -442,14 +489,14 @@ class _MembershipFormState extends State<MembershipForm> {
                           : Text(
                               'Register Now!',
                               style: GoogleFonts.poppins(
-                                fontSize: 16,
+                                fontSize: buttonFontSize,
                                 fontWeight: FontWeight.w500,
                                 color: Colors.white,
                               ),
                             ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: verticalSpacing),
                 ],
               ),
             ),
@@ -459,6 +506,480 @@ class _MembershipFormState extends State<MembershipForm> {
     );
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+// import 'package:flutter/material.dart';
+// import 'package:google_fonts/google_fonts.dart';
+// import 'dart:io';
+// import 'package:image_picker/image_picker.dart';
+// import 'package:ems/services/membership_card_services.dart';
+
+// class MembershipForm extends StatefulWidget {
+//   final Function onSubmit;
+//   final List<Map<String, dynamic>>? membershipTypes;
+//   final String? description; // Keep this parameter for future API integration
+
+//   const MembershipForm({
+//     super.key, 
+//     required this.onSubmit, 
+//     this.membershipTypes,
+//     this.description,
+//   });
+  
+//   @override
+//   State<MembershipForm> createState() => _MembershipFormState();
+// }
+
+// class _MembershipFormState extends State<MembershipForm> {
+//   final _formKey = GlobalKey<FormState>();
+//   int? _selectedMembershipTypeId;
+//   final TextEditingController _paidAmountController = TextEditingController();
+//   final TextEditingController _remarksController = TextEditingController();
+//   File? _paymentSlip;
+//   bool _isLoading = false;
+//   List<Map<String, dynamic>> _membershipTypes = [];
+//   final ImagePicker _picker = ImagePicker();
+  
+//   // Hardcoded description for now - we'll replace this with API data when available
+//   final String _membershipDescription = 
+//     'This Membership Card is issued by Extratech Oval International Cricket Stadium to all the candidates of Extratech with a minimum fee of \$100 for 10 Years. The candidates holding this card will have free access to all national and international games held in Extratech Oval International Cricket Stadium. Apply Today for Membership!';
+
+//   @override
+//   void initState() {
+//     super.initState();
+//     if (widget.membershipTypes != null && widget.membershipTypes!.isNotEmpty) {
+//       setState(() {
+//         _membershipTypes = widget.membershipTypes!;
+//       });
+//     } else {
+//       _fetchMembershipTypes();
+//     }
+//   }
+
+//   Future<void> _fetchMembershipTypes() async {
+//     try {
+//       setState(() {
+//         _isLoading = true;
+//       });
+      
+//       final types = await MembershipCardService.getMembershipTypes();
+      
+//       setState(() {
+//         _membershipTypes = types;
+//         _isLoading = false;
+//       });
+//     } catch (e) {
+//       setState(() {
+//         _isLoading = false;
+//       });
+      
+//       if (mounted) {
+//         ScaffoldMessenger.of(context).showSnackBar(
+//           SnackBar(
+//             content: Text('Error loading membership types: $e'),
+//             backgroundColor: Colors.red,
+//             duration: const Duration(seconds: 5),
+//           ),
+//         );
+//       }
+//     }
+//   }
+
+//   Future<void> _getPaymentSlip(ImageSource source) async {
+//     try {
+//       final XFile? photo = await _picker.pickImage(
+//         source: source,
+//         imageQuality: 80,
+//       );
+
+//       if (photo != null) {
+//         setState(() {
+//           _paymentSlip = File(photo.path);
+//         });
+//       }
+//     } catch (e) {
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         SnackBar(content: Text('Error selecting image: $e')),
+//       );
+//     }
+//   }
+
+//   void _updatePaidAmount(int typeId) {
+//     final selectedType = _membershipTypes.firstWhere(
+//       (element) => element['id'] == typeId,
+//       orElse: () => {'amount': 0, 'type': 'Unknown'},
+//     );
+    
+//     setState(() {
+//       _paidAmountController.text = selectedType['amount'].toString();
+//     });
+//   }
+
+//   void _submitForm() async {
+//     if (_formKey.currentState!.validate()) {
+//       if (_paymentSlip == null) {
+//         ScaffoldMessenger.of(context).showSnackBar(
+//           const SnackBar(
+//             content: Text('Please upload payment slip'),
+//           ),
+//         );
+//         return;
+//       }
+      
+//       setState(() {
+//         _isLoading = true;
+//       });
+      
+//       try {
+//         Map<String, dynamic> formData = {
+//           'card_type_id': _selectedMembershipTypeId.toString(),
+//           'amount': _paidAmountController.text,
+//           'payment_slip': _paymentSlip,
+//           'remarks': _remarksController.text,
+//         };
+        
+//         widget.onSubmit(formData);
+//       } catch (e) {
+//         if (mounted) {
+//           ScaffoldMessenger.of(context).showSnackBar(
+//             SnackBar(content: Text('Error: $e')),
+//           );
+//         }
+        
+//         setState(() {
+//           _isLoading = false;
+//         });
+//       }
+//     }
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     final screenWidth = MediaQuery.of(context).size.width;
+    
+//     if (_isLoading) {
+//       return const Center(
+//         child: CircularProgressIndicator(),
+//       );
+//     }
+
+//     return Container(
+//       width: double.infinity,
+//       color: const Color(0xFFFFFFFF),
+//       child: Column(
+//         crossAxisAlignment: CrossAxisAlignment.start,
+//         children: [
+//           // Student Membership Registration title
+//           SizedBox(
+//             width: screenWidth * 0.75,
+//             child: Text(
+//               'Student Membership Registration',
+//               style: GoogleFonts.poppins(
+//                 fontSize: 18,
+//                 fontWeight: FontWeight.w600,
+//                 color: const Color(0xFF205EB5),
+//               ),
+//             ),
+//           ),
+          
+//           // Divider
+//           Container(
+//             margin: const EdgeInsets.symmetric(vertical: 8),
+//             width: double.infinity,
+//             height: 1,
+//             color: const Color(0xFFEEEEEE),
+//           ),
+          
+//           // Description text area - Using hardcoded description for now
+//           Container(
+//             width: screenWidth * 0.85,
+//             margin: const EdgeInsets.only(bottom: 16),
+//             child: Text(
+//               _membershipDescription,
+//               style: GoogleFonts.poppins(
+//                 fontSize: 14,
+//                 color: Colors.black87,
+//               ),
+//             ),
+//           ),
+          
+//           // Form area
+//           Container(
+//             width: screenWidth * 0.9,
+//             padding: const EdgeInsets.symmetric(horizontal: 10),
+//             child: Form(
+//               key: _formKey,
+//               child: Column(
+//                 crossAxisAlignment: CrossAxisAlignment.start,
+//                 children: [
+//                   // Membership Type
+//                   Text(
+//                     'Membership Type',
+//                     style: GoogleFonts.poppins(
+//                       fontSize: 16,
+//                       fontWeight: FontWeight.w500,
+//                       color: Colors.black87,
+//                     ),
+//                   ),
+//                   const SizedBox(height: 8),
+//                   Container(
+//                     decoration: BoxDecoration(
+//                       border: Border.all(color: Colors.grey.shade300),
+//                       borderRadius: BorderRadius.circular(4),
+//                     ),
+//                     child: DropdownButtonFormField<int>(
+//                       decoration: const InputDecoration(
+//                         contentPadding: EdgeInsets.symmetric(horizontal: 12),
+//                         border: InputBorder.none,
+//                       ),
+//                       hint: Text('Select Membership', style: GoogleFonts.poppins()),
+//                       value: _selectedMembershipTypeId,
+//                       isExpanded: true,
+//                       validator: (value) {
+//                         if (value == null) {
+//                           return 'Please select a membership type';
+//                         }
+//                         return null;
+//                       },
+//                       items: _membershipTypes.map((type) {
+//                         return DropdownMenuItem<int>(
+//                           value: type['id'],
+//                           child: Text(
+//                             '${type['type']} - ${type['currency']} ${type['amount']}',
+//                             style: GoogleFonts.poppins(),
+//                           ),
+//                         );
+//                       }).toList(),
+//                       onChanged: (value) {
+//                         setState(() {
+//                           _selectedMembershipTypeId = value;
+//                           if (value != null) {
+//                             _updatePaidAmount(value);
+//                           }
+//                         });
+//                       },
+//                     ),
+//                   ),
+//                   const SizedBox(height: 16),
+                  
+//                   // Paid Amount
+//                   Text(
+//                     'Paid Amount',
+//                     style: GoogleFonts.poppins(
+//                       fontSize: 16,
+//                       fontWeight: FontWeight.w500,
+//                       color: Colors.black87,
+//                     ),
+//                   ),
+//                   const SizedBox(height: 8),
+//                   TextFormField(
+//                     controller: _paidAmountController,
+//                     decoration: InputDecoration(
+//                       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+//                       hintText: 'Enter the paid amount',
+//                       hintStyle: GoogleFonts.poppins(color: Colors.grey),
+//                       border: OutlineInputBorder(
+//                         borderRadius: BorderRadius.circular(4),
+//                         borderSide: BorderSide(color: Colors.grey.shade300),
+//                       ),
+//                       enabledBorder: OutlineInputBorder(
+//                         borderRadius: BorderRadius.circular(4),
+//                         borderSide: BorderSide(color: Colors.grey.shade300),
+//                       ),
+//                     ),
+//                     keyboardType: TextInputType.number,
+//                     validator: (value) {
+//                       if (value == null || value.isEmpty) {
+//                         return 'Please enter paid amount';
+//                       }
+//                       if (double.tryParse(value) == null) {
+//                         return 'Please enter a valid amount';
+//                       }
+//                       return null;
+//                     },
+//                   ),
+//                   const SizedBox(height: 16),
+                  
+//                   // Payment Slip
+//                   Text(
+//                     'Payment Slip',
+//                     style: GoogleFonts.poppins(
+//                       fontSize: 16,
+//                       fontWeight: FontWeight.w500,
+//                       color: Colors.black87,
+//                     ),
+//                   ),
+//                   const SizedBox(height: 8),
+//                   Container(
+//                     decoration: BoxDecoration(
+//                       border: Border.all(color: Colors.grey.shade300),
+//                       borderRadius: BorderRadius.circular(4),
+//                     ),
+//                     height: 45,
+//                     child: Row(
+//                       children: [
+//                         // Choose File Button
+//                         Expanded(
+//                           child: Material(
+//                             color: Colors.grey.shade200,
+//                             borderRadius: const BorderRadius.only(
+//                               topLeft: Radius.circular(3),
+//                               bottomLeft: Radius.circular(3),
+//                             ),
+//                             child: InkWell(
+//                               onTap: () => _getPaymentSlip(ImageSource.gallery),
+//                               child: Padding(
+//                                 padding: const EdgeInsets.symmetric(vertical: 12),
+//                                 child: Text(
+//                                   'Choose File',
+//                                   textAlign: TextAlign.center,
+//                                   style: GoogleFonts.poppins(
+//                                     fontSize: 14,
+//                                     color: Colors.black87,
+//                                   ),
+//                                 ),
+//                               ),
+//                             ),
+//                           ),
+//                         ),
+//                         // Upload Payment Slip Button
+//                         Expanded(
+//                           child: Material(
+//                             color: Colors.transparent,
+//                             child: InkWell(
+//                               onTap: () => _getPaymentSlip(ImageSource.camera),
+//                               child: Padding(
+//                                 padding: const EdgeInsets.symmetric(vertical: 12),
+//                                 child: Text(
+//                                   'Upload Payment Slip',
+//                                   textAlign: TextAlign.center,
+//                                   style: GoogleFonts.poppins(
+//                                     fontSize: 14,
+//                                     color: Colors.black87,
+//                                   ),
+//                                 ),
+//                               ),
+//                             ),
+//                           ),
+//                         ),
+//                       ],
+//                     ),
+//                   ),
+//                   // Show selected file name or preview
+//                   if (_paymentSlip != null)
+//                     Padding(
+//                       padding: const EdgeInsets.only(top: 8),
+//                       child: Row(
+//                         children: [
+//                           const Icon(Icons.check_circle, color: Colors.green, size: 16),
+//                           const SizedBox(width: 8),
+//                           Expanded(
+//                             child: Text(
+//                               'File selected: ${_paymentSlip!.path.split('/').last}',
+//                               style: GoogleFonts.poppins(
+//                                 fontSize: 12,
+//                                 color: Colors.green,
+//                               ),
+//                               maxLines: 1,
+//                               overflow: TextOverflow.ellipsis,
+//                             ),
+//                           ),
+//                           IconButton(
+//                             icon: const Icon(Icons.close, size: 16),
+//                             padding: EdgeInsets.zero,
+//                             constraints: const BoxConstraints(),
+//                             onPressed: () {
+//                               setState(() {
+//                                 _paymentSlip = null;
+//                               });
+//                             },
+//                           ),
+//                         ],
+//                       ),
+//                     ),
+//                   const SizedBox(height: 16),
+                  
+//                   // Remarks
+//                   Text(
+//                     'Remarks',
+//                     style: GoogleFonts.poppins(
+//                       fontSize: 16,
+//                       fontWeight: FontWeight.w500,
+//                       color: Colors.black87,
+//                     ),
+//                   ),
+//                   const SizedBox(height: 8),
+//                   TextFormField(
+//                     controller: _remarksController,
+//                     decoration: InputDecoration(
+//                       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+//                       hintText: 'Leave your message here...',
+//                       hintStyle: GoogleFonts.poppins(color: Colors.grey),
+//                       border: OutlineInputBorder(
+//                         borderRadius: BorderRadius.circular(4),
+//                         borderSide: BorderSide(color: Colors.grey.shade300),
+//                       ),
+//                       enabledBorder: OutlineInputBorder(
+//                         borderRadius: BorderRadius.circular(4),
+//                         borderSide: BorderSide(color: Colors.grey.shade300),
+//                       ),
+//                     ),
+//                     maxLines: 3,
+//                   ),
+//                   const SizedBox(height: 24),
+                  
+//                   // Register Now Button
+//                   SizedBox(
+//                     width: double.infinity,
+//                     height: 45,
+//                     child: ElevatedButton(
+//                       onPressed: _isLoading ? null : _submitForm,
+//                       style: ElevatedButton.styleFrom(
+//                         backgroundColor: const Color(0xFF205EB5),
+//                         shape: RoundedRectangleBorder(
+//                           borderRadius: BorderRadius.circular(4),
+//                         ),
+//                       ),
+//                       child: _isLoading
+//                           ? const SizedBox(
+//                               width: 20,
+//                               height: 20,
+//                               child: CircularProgressIndicator(
+//                                 color: Colors.white,
+//                                 strokeWidth: 2,
+//                               ),
+//                             )
+//                           : Text(
+//                               'Register Now!',
+//                               style: GoogleFonts.poppins(
+//                                 fontSize: 16,
+//                                 fontWeight: FontWeight.w500,
+//                                 color: Colors.white,
+//                               ),
+//                             ),
+//                     ),
+//                   ),
+//                   const SizedBox(height: 16),
+//                 ],
+//               ),
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+// }
 
 
 

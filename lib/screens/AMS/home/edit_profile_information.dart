@@ -1,15 +1,24 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:ems/models/user_detail.dart';
-import 'package:ems/widgets/AMS/custom_widgets/custom_app_bar.dart';
 import 'package:intl/intl.dart';
+import 'package:ems/models/edit_user_details.dart';
+import 'package:ems/services/edit_profile_service.dart';
+import 'package:ems/widgets/AMS/edit_profile_widget/residency_section.dart';
+import 'package:ems/widgets/AMS/edit_profile_widget/general_info_section.dart';
+import 'package:ems/widgets/AMS/edit_profile_widget/signature_section.dart';
+import 'package:ems/widgets/AMS/edit_profile_widget/emergency_contact_section.dart';
+import 'package:ems/utils/responsive_utils.dart';
+import 'package:ems/widgets/AMS/custom_widgets/custom_app_bar.dart';
 
 class EditProfileScreen extends StatefulWidget {
-  final UserDetail userDetail;
+  // Modified constructor to accept userDetail parameter
+  final EditUserDetail? userDetail;
 
   const EditProfileScreen({
-    Key? key,
-    required this.userDetail,
+    Key? key, 
+    this.userDetail,
   }) : super(key: key);
 
   @override
@@ -18,84 +27,248 @@ class EditProfileScreen extends StatefulWidget {
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
-  
-  // Form controllers
-  late TextEditingController _nameController;
-  late TextEditingController _phoneController;
-  late TextEditingController _emailController;
-  late TextEditingController _dobController;
-  late TextEditingController _homeAddressController;
-  late TextEditingController _commencementDateController;
-  late TextEditingController _signatureController;
-  
-  // Additional controllers - initialized with empty strings
-  final TextEditingController _postalCodeController = TextEditingController();
-  final TextEditingController _passportNumberController = TextEditingController();
-  final TextEditingController _passportExpiryController = TextEditingController();
-  final TextEditingController _emergencyNameController = TextEditingController();
-  final TextEditingController _emergencyRelationController = TextEditingController();
-  final TextEditingController _emergencyContactController = TextEditingController();
-  
-  // Form values
-  String _selectedGender = '1'; // Default to male
-  bool _isAustralianResident = false;
-  
-  // Simple dropdowns
-  String _selectedBirthCountry = 'Nepal';
-  String _selectedBirthState = 'Bagmati';
-  String _selectedCurrentCountry = 'Nepal';
-  String _selectedCurrentState = 'Bagmati';
-  String _selectedHighestEducation = 'SLC/SEE';
-  String _selectedVisaType = 'None';
-  
-  // Simple lists for dropdowns
-  final List<String> _countries = ['Nepal', 'Australia', 'India'];
-  final List<String> _states = ['Bagmati', 'Gandaki', 'Province 1'];
-  final List<String> _educationLevels = ['SLC/SEE', 'Higher Secondary', 'Bachelor', 'Master', 'PhD'];
-  final List<String> _visaTypes = ['None', 'Student', 'Tourist', 'Business', 'Work', 'Other'];
-  
+  final _profileService = ProfileService();
   bool _isSubmitting = false;
+  bool _isLoading = true;
+  EditUserDetail? _userDetail;
+  File? _profileImage;
+
+  // Form data
+  String _name = '';
+  String _gender = '1';
+  String _phone = '';
+  String _email = '';
+  String _dob = '';
+  String _birthCountry = '';
+  String _birthState = '';
+  String _homeAddress = '';
+  String _commencementDate = '';
+  String _signature = '';
+  String _isAusPermanentResident = '0';
+  String _countryOfLiving = '';
+  String _currentStateId = '';
+  String _residentialAddress = '';
+  String _postCode = '';
+  String _visaType = '';
+  String _passportNumber = '';
+  String _passportExpiryDate = '';
+  String _eContactName = '';
+  String _relation = '';
+  String _eContactNo = '';
+  String _highestEducation = '';
+
+  // Dynamic data from API
+  Map<String, String> _countriesMap = {};
+  Map<String, String> _statesMap = {};
+  List<String> _educationLevels = [];
+  List<String> _visaTypes = [];
 
   @override
   void initState() {
     super.initState();
-    _initControllers();
+    
+    // If widget.userDetail is provided, use it directly
+    if (widget.userDetail != null) {
+      _userDetail = widget.userDetail;
+    }
+    
+    // Log current user and date information for debugging
+    _logUserInfo();
+    
+    // Load all data on startup
+    _loadAllData();
+  }
+  
+  void _logUserInfo() {
+    final DateTime now = DateTime.now().toUtc();
+    final String formattedDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
+    
+    debugPrint('==========================================================');
+    debugPrint('Current Date and Time (UTC): $formattedDate');
+    debugPrint('Current User\'s Login: darwinacharya3');
+    debugPrint('==========================================================');
   }
 
-  void _initControllers() {
-    // Initialize with user details (only the ones we know exist)
-    _nameController = TextEditingController(text: widget.userDetail.name);
-    _phoneController = TextEditingController(text: widget.userDetail.mobileNo);
-    _emailController = TextEditingController(text: widget.userDetail.email);
-    _dobController = TextEditingController(text: widget.userDetail.dob);
-    _homeAddressController = TextEditingController(text: widget.userDetail.birthResidentialAddress);
-    _commencementDateController = TextEditingController(text: widget.userDetail.commencementDate);
-    _signatureController = TextEditingController(text: widget.userDetail.name); // Using name as default signature
-    
-    _selectedGender = widget.userDetail.gender;
-    
-    // Note: The missing properties are already initialized with empty TextEditingControllers
+  Future<void> _loadAllData() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Log the start of data loading
+      debugPrint('Starting to load profile data...');
+      
+      // If we don't already have user detail from constructor, fetch it from API
+      if (_userDetail == null) {
+        await _fetchProfileData();
+      } else {
+        debugPrint('Using provided userDetail from constructor');
+      }
+      
+      // Then load all the supporting data in parallel
+      await Future.wait([
+        _fetchCountries(),
+        _fetchStates(),
+        _fetchEducationLevels(),
+        _fetchVisaTypes(),
+      ]);
+      
+      // Once all data is loaded, initialize the form
+      _initializeFormData();
+      
+      debugPrint('Successfully loaded all profile data');
+    } catch (e) {
+      // Log error to console instead of showing snackbar
+      debugPrint('Error loading data: $e');
+      
+      if (mounted) {
+        // Show error message to user
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading data: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
-  Future<void> _selectDate(BuildContext context, TextEditingController controller) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: controller.text.isNotEmpty 
-          ? DateFormat('yyyy-MM-dd').parse(controller.text) 
-          : DateTime.now(),
-      firstDate: DateTime(1900),
-      lastDate: DateTime(2100),
-    );
+  void _initializeFormData() {
+    if (_userDetail == null) {
+      debugPrint('Cannot initialize form data: User detail is null');
+      return;
+    }
     
-    if (picked != null) {
-      setState(() {
-        controller.text = DateFormat('yyyy-MM-dd').format(picked);
-      });
+    _name = _userDetail!.name;
+    _gender = _userDetail!.gender;
+    _phone = _userDetail!.mobileNo;
+    _email = _userDetail!.email;
+    _dob = _userDetail!.dob;
+    _birthCountry = _userDetail!.countryOfBirth;
+    _birthState = _userDetail!.birthStateId;
+    _homeAddress = _userDetail!.birthResidentialAddress;
+    _commencementDate = _userDetail!.commencementDate;
+    _signature = _userDetail!.signature;
+    _isAusPermanentResident = _userDetail!.isAusPermanentResident;
+    _countryOfLiving = _userDetail!.countryOfLiving;
+    _currentStateId = _userDetail!.currentStateId;
+    _residentialAddress = _userDetail!.residentialAddress;
+    _postCode = _userDetail!.postCode;
+    _visaType = _userDetail!.visaType;
+    _passportNumber = _userDetail!.passportNumber;
+    _passportExpiryDate = _userDetail!.passportExpiryDate;
+    _eContactName = _userDetail!.eContactName;
+    _relation = _userDetail!.relation;
+    _eContactNo = _userDetail!.eContactNo;
+    _highestEducation = _userDetail!.highestEducation;
+    
+    // Log form data for debugging
+    debugPrint('Form data initialized:');
+    debugPrint('Name: $_name');
+    debugPrint('Email: $_email');
+    debugPrint('Gender: $_gender');
+    debugPrint('Editable fields: ${_userDetail!.editableFields}');
+  }
+
+  Future<void> _fetchProfileData() async {
+    try {
+      debugPrint('Fetching user profile data...');
+      final userDetail = await _profileService.getUserProfile();
+      
+      if (mounted) {
+        setState(() {
+          _userDetail = userDetail;
+        });
+        debugPrint('User profile data received successfully');
+      }
+    } catch (e) {
+      debugPrint('Failed to fetch profile: $e');
+      rethrow; // Re-throw to be caught by the caller
+    }
+  }
+
+  Future<void> _fetchCountries() async {
+    try {
+      debugPrint('Fetching countries data...');
+      final countries = await _profileService.getCountries();
+      
+      if (mounted) {
+        setState(() {
+          _countriesMap = countries;
+        });
+        debugPrint('Countries data received: ${countries.length} countries');
+      }
+    } catch (e) {
+      debugPrint('Failed to fetch countries: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> _fetchStates() async {
+    try {
+      debugPrint('Fetching states data...');
+      final states = await _profileService.getStates();
+      
+      if (mounted) {
+        setState(() {
+          _statesMap = states;
+        });
+        debugPrint('States data received: ${states.length} states');
+      }
+    } catch (e) {
+      debugPrint('Failed to fetch states: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> _fetchEducationLevels() async {
+    try {
+      debugPrint('Fetching education levels...');
+      final educationLevels = await _profileService.getEducationLevels();
+      
+      if (mounted) {
+        setState(() {
+          _educationLevels = educationLevels;
+        });
+        debugPrint('Education levels received: ${educationLevels.length} levels');
+      }
+    } catch (e) {
+      debugPrint('Failed to fetch education levels: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> _fetchVisaTypes() async {
+    try {
+      debugPrint('Fetching visa types...');
+      final visaTypes = await _profileService.getVisaTypes();
+      
+      if (mounted) {
+        setState(() {
+          _visaTypes = visaTypes;
+        });
+        debugPrint('Visa types received: ${visaTypes.length} types');
+      }
+    } catch (e) {
+      debugPrint('Failed to fetch visa types: $e');
+      rethrow;
     }
   }
 
   Future<void> _saveProfile() async {
+    if (_userDetail == null) {
+      debugPrint('Cannot save profile: User detail is null');
+      return;
+    }
+    
     if (!_formKey.currentState!.validate()) {
+      debugPrint('Form validation failed');
       return;
     }
 
@@ -104,45 +277,188 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     });
 
     try {
-      // Simulating API call with a delay
-      await Future.delayed(const Duration(seconds: 1));
+      debugPrint('==== SUBMITTING PROFILE DATA ====');
+      final DateTime now = DateTime.now().toUtc();
+      final String formattedDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
+      debugPrint('Current Date and Time (UTC): $formattedDate');
+      debugPrint('Current User\'s Login: darwinacharya3');
       
-      // We'll add the actual API integration later
+      // Log all form data for debugging
+      debugPrint('User ID: ${_userDetail!.userId}');
+      debugPrint('Student ID: ${_userDetail!.studentId}');
+      debugPrint('Name: $_name');
+      debugPrint('Email: $_email');
+      debugPrint('Gender: $_gender');
+      debugPrint('Phone: $_phone');
+      debugPrint('Date of Birth: $_dob');
+      debugPrint('Country of Birth: $_birthCountry');
+      debugPrint('Birth State: $_birthState');
+      debugPrint('Home Address: $_homeAddress');
+      debugPrint('Commencement Date: $_commencementDate');
+      debugPrint('Signature: $_signature');
+      debugPrint('Highest Education: $_highestEducation');
+      debugPrint('Is AUS Permanent Resident: $_isAusPermanentResident');
+      debugPrint('Country of Living: $_countryOfLiving');
+      debugPrint('Residential Address: $_residentialAddress');
+      debugPrint('Post Code: $_postCode');
+      debugPrint('Visa Type: $_visaType');
+      debugPrint('Current State: $_currentStateId');
+      debugPrint('Passport Number: $_passportNumber');
+      debugPrint('Passport Expiry Date: $_passportExpiryDate');
+      debugPrint('Emergency Contact Name: $_eContactName');
+      debugPrint('Relation: $_relation');
+      debugPrint('Emergency Contact Number: $_eContactNo');
+      debugPrint('Profile Image: ${_profileImage?.path ?? "No new image"}');
+      
+      final success = await _profileService.updateUserProfile(
+        name: _name,
+        email: _email,
+        status: _userDetail!.status,
+        userId: _userDetail!.userId,
+        studentId: _userDetail!.studentId,
+        gender: _gender,
+        mobileNo: _phone,
+        dob: _dob,
+        countryOfBirth: _birthCountry,
+        birthStateId: _birthState,
+        birthResidentialAddress: _homeAddress,
+        commencementDate: _commencementDate,
+        signature: _signature,
+        isAusPermanentResident: _isAusPermanentResident,
+        countryOfLiving: _countryOfLiving,
+        residentialAddress: _residentialAddress,
+        postCode: _postCode,
+        visaType: _visaType,
+        currentStateId: _currentStateId,
+        passportNumber: _passportNumber,
+        passportExpiryDate: _passportExpiryDate,
+        eContactName: _eContactName,
+        relation: _relation,
+        eContactNo: _eContactNo,
+        highestEducation: _highestEducation,
+        profileImage: _profileImage,
+      );
+      
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profile updated successfully')),
-        );
-        Navigator.pop(context, true);
+        if (success) {
+          debugPrint('Profile updated successfully');
+          
+          // Show subtle success indicator
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Profile updated successfully'),
+              duration: Duration(seconds: 2),
+              backgroundColor: Colors.green,
+            ),
+          );
+          
+          // Navigate back after successful update
+          Navigator.pop(context, true);
+        } else {
+          debugPrint('Failed to update profile: API returned unsuccessful status');
+          setState(() {
+            _isSubmitting = false;
+          });
+          
+          // Show error message
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to update profile. Please try again.'),
+              duration: Duration(seconds: 2),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     } catch (e) {
+      debugPrint('Error updating profile: $e');
+      
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update profile: ${e.toString()}')),
-        );
         setState(() {
           _isSubmitting = false;
         });
+        
+        // Show error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            duration: const Duration(seconds: 3),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
 
-  @override
-  void dispose() {
-    // Dispose all controllers
-    _nameController.dispose();
-    _phoneController.dispose();
-    _emailController.dispose();
-    _dobController.dispose();
-    _homeAddressController.dispose();
-    _commencementDateController.dispose();
-    _signatureController.dispose();
-    _postalCodeController.dispose();
-    _passportNumberController.dispose();
-    _passportExpiryController.dispose();
-    _emergencyNameController.dispose();
-    _emergencyRelationController.dispose();
-    _emergencyContactController.dispose();
-    super.dispose();
+  void _updateGeneralInfo(
+    String name,
+    String gender,
+    String phone,
+    String email,
+    String dob,
+    String birthCountry,
+    String birthState,
+    String homeAddress,
+    String commencementDate,
+    String highestEducation,
+    File? profileImage,
+  ) {
+    setState(() {
+      _name = name;
+      _gender = gender;
+      _phone = phone;
+      _email = email;
+      _dob = dob;
+      _birthCountry = birthCountry;
+      _birthState = birthState;
+      _homeAddress = homeAddress;
+      _commencementDate = commencementDate;
+      _highestEducation = highestEducation;
+      if (profileImage != null) {
+        _profileImage = profileImage;
+        debugPrint('Profile image updated in parent: ${profileImage.path}');
+      }
+    });
+  }
+
+  void _updateSignature(String signature) {
+    setState(() {
+      _signature = signature;
+    });
+  }
+
+  void _updateResidencyInfo(
+    String isAusPermanentResident,
+    String countryOfLiving,
+    String currentStateId,
+    String residentialAddress,
+    String postCode,
+    String visaType,
+    String passportNumber,
+    String passportExpiryDate,
+  ) {
+    setState(() {
+      _isAusPermanentResident = isAusPermanentResident;
+      _countryOfLiving = countryOfLiving;
+      _currentStateId = currentStateId;
+      _residentialAddress = residentialAddress;
+      _postCode = postCode;
+      _visaType = visaType;
+      _passportNumber = passportNumber;
+      _passportExpiryDate = passportExpiryDate;
+    });
+  }
+
+  void _updateEmergencyContact(
+    String eContactName,
+    String relation,
+    String eContactNo,
+  ) {
+    setState(() {
+      _eContactName = eContactName;
+      _relation = relation;
+      _eContactNo = eContactNo;
+    });
   }
 
   @override
@@ -150,630 +466,143 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return Scaffold(
       appBar: CustomAppBar(
         title: 'Edit Profile',
-        // icon: Icons.edit,
         showBackButton: true,
       ),
-      body: _buildForm(),
+      body: _isLoading
+          ? const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Loading profile data...'),
+                ],
+              ),
+            )
+          : _buildForm(),
     );
   }
 
   Widget _buildForm() {
+    // Check if we have all required data before rendering the form
+    if (_userDetail == null) {
+      debugPrint('User detail is null, cannot render form');
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 48, color: Colors.red),
+            const SizedBox(height: 16),
+            const Text(
+              'Error: Could not load profile data',
+              style: TextStyle(fontSize: 18),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _loadAllData,
+              child: const Text('Try Again'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final bool hasRequiredData = 
+        _countriesMap.isNotEmpty && 
+        _statesMap.isNotEmpty && 
+        _educationLevels.isNotEmpty && 
+        _visaTypes.isNotEmpty;
+
+    if (!hasRequiredData) {
+      debugPrint('Required data missing, cannot render form');
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 48, color: Colors.amber),
+            const SizedBox(height: 16),
+            const Text(
+              'Warning: Some reference data could not be loaded',
+              style: TextStyle(fontSize: 18),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _loadAllData,
+              child: const Text('Try Again'),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Form(
       key: _formKey,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _buildGeneralSettings(),
-            const SizedBox(height: 24),
-            _buildSignatureSection(),
-            const SizedBox(height: 24),
-            _buildResidencyInformation(),
-            const SizedBox(height: 24),
-            _buildEmergencyContact(),
-            const SizedBox(height: 32),
-            _buildSaveButton(),
-            const SizedBox(height: 32),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildGeneralSettings() {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _buildSectionHeader('General Settings', widget.userDetail.commencementDate),
-            _buildSectionSubtitle('Student personal information'),
-            const SizedBox(height: 16),
-            
-            _buildTextField(
-              label: 'Name',
-              controller: _nameController, 
-              validator: (value) => value!.isEmpty ? 'Name is required' : null,
+        padding: ResponsiveUtils.getScreenPadding(context),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: ResponsiveUtils.getFormWidth(context),
             ),
-            
-            const SizedBox(height: 16),
-            _buildGenderSelection(),
-            
-            const SizedBox(height: 16),
-            _buildTextField(
-              label: 'Phone',
-              controller: _phoneController, 
-              keyboardType: TextInputType.phone,
-              validator: (value) => value!.isEmpty ? 'Phone number is required' : null,
-            ),
-            
-            const SizedBox(height: 16),
-            _buildTextField(
-              label: 'Email',
-              controller: _emailController, 
-              keyboardType: TextInputType.emailAddress,
-              validator: (value) {
-                if (value!.isEmpty) return 'Email is required';
-                final emailRegExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-                return !emailRegExp.hasMatch(value) ? 'Enter a valid email' : null;
-              },
-            ),
-            
-            const SizedBox(height: 16),
-            _buildDatePicker(
-              label: 'Date of Birth',
-              controller: _dobController,
-              validator: (value) => value!.isEmpty ? 'Date of birth is required' : null,
-            ),
-            
-            const SizedBox(height: 16),
-            _buildSimpleDropdown(
-              label: 'Birth Country',
-              value: _selectedBirthCountry,
-              items: _countries,
-              onChanged: (value) {
-                setState(() {
-                  _selectedBirthCountry = value!;
-                });
-              },
-            ),
-            
-            const SizedBox(height: 16),
-            _buildSimpleDropdown(
-              label: 'State',
-              value: _selectedBirthState,
-              items: _states,
-              onChanged: (value) {
-                setState(() {
-                  _selectedBirthState = value!;
-                });
-              },
-            ),
-            
-            const SizedBox(height: 16),
-            _buildTextField(
-              label: 'Home Country Address',
-              controller: _homeAddressController,
-            ),
-            
-            const SizedBox(height: 16),
-            _buildDatePicker(
-              label: 'Commencement Date',
-              controller: _commencementDateController,
-              validator: (value) => value!.isEmpty ? 'Commencement date is required' : null,
-            ),
-            
-            const SizedBox(height: 16),
-            _buildSimpleDropdown(
-              label: 'Highest Education',
-              value: _selectedHighestEducation,
-              items: _educationLevels,
-              onChanged: (value) {
-                setState(() {
-                  _selectedHighestEducation = value!;
-                });
-              },
-            ),
-            
-            const SizedBox(height: 16),
-            _buildImagePicker(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSignatureSection() {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'Signature and Acceptance',
-              style: GoogleFonts.poppins(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            _buildSectionSubtitle("Student's full name as a signature"),
-            const SizedBox(height: 16),
-            
-            _buildTextField(
-              label: 'Signature',
-              controller: _signatureController,
-              validator: (value) => value!.isEmpty ? 'Signature is required' : null,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildResidencyInformation() {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _buildSectionHeader('Residency Information', widget.userDetail.commencementDate),
-            _buildSectionSubtitle('Residential information'),
-            const SizedBox(height: 16),
-            
-            _buildAustralianResidenceSelection(),
-            
-            const SizedBox(height: 16),
-            _buildSimpleDropdown(
-              label: 'Currently Living Country',
-              value: _selectedCurrentCountry,
-              items: _countries,
-              onChanged: (value) {
-                setState(() {
-                  _selectedCurrentCountry = value!;
-                });
-              },
-            ),
-            
-            const SizedBox(height: 16),
-            _buildSimpleDropdown(
-              label: 'State',
-              value: _selectedCurrentState,
-              items: _states,
-              onChanged: (value) {
-                setState(() {
-                  _selectedCurrentState = value!;
-                });
-              },
-            ),
-            
-            const SizedBox(height: 16),
-            _buildTextField(
-              label: 'Home Country Address',
-              controller: _homeAddressController,
-            ),
-            
-            const SizedBox(height: 16),
-            _buildTextField(
-              label: 'Postal Code',
-              controller: _postalCodeController,
-              keyboardType: TextInputType.number,
-            ),
-            
-            const SizedBox(height: 16),
-            _buildSimpleDropdown(
-              label: 'Visa Type',
-              value: _selectedVisaType,
-              items: _visaTypes,
-              onChanged: (value) {
-                setState(() {
-                  _selectedVisaType = value!;
-                });
-              },
-            ),
-            
-            const SizedBox(height: 16),
-            _buildTextField(
-              label: 'Passport Number',
-              controller: _passportNumberController,
-            ),
-            
-            const SizedBox(height: 16),
-            _buildDatePicker(
-              label: 'Passport Expiry Date',
-              controller: _passportExpiryController,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEmergencyContact() {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'Emergency Contact',
-              style: GoogleFonts.poppins(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            _buildSectionSubtitle('Emergency contact of student'),
-            const SizedBox(height: 16),
-            
-            _buildTextField(
-              label: 'Full Name',
-              controller: _emergencyNameController,
-              validator: (value) => value!.isEmpty ? 'Emergency contact name is required' : null,
-            ),
-            
-            const SizedBox(height: 16),
-            _buildTextField(
-              label: 'Relation to Student',
-              controller: _emergencyRelationController,
-              validator: (value) => value!.isEmpty ? 'Relation is required' : null,
-            ),
-            
-            const SizedBox(height: 16),
-            _buildTextField(
-              label: 'Contact No',
-              controller: _emergencyContactController,
-              keyboardType: TextInputType.phone,
-              validator: (value) => value!.isEmpty ? 'Emergency contact number is required' : null,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSectionHeader(String title, String date) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          title,
-          style: GoogleFonts.poppins(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(
-              'Start | Added On',
-              style: GoogleFonts.poppins(
-                fontSize: 14,
-                color: Colors.grey[700],
-              ),
-            ),
-            Text(
-              date,
-              style: GoogleFonts.poppins(
-                fontSize: 14,
-                color: const Color.fromARGB(255, 227, 10, 169),
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSectionSubtitle(String subtitle) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Text(
-        subtitle,
-        style: GoogleFonts.poppins(
-          fontSize: 16,
-          color: const Color.fromARGB(255, 227, 10, 169),
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTextField({
-    required String label, 
-    required TextEditingController controller,
-    TextInputType keyboardType = TextInputType.text,
-    String? Function(String?)? validator,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: GoogleFonts.poppins(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: controller,
-          keyboardType: keyboardType,
-          decoration: InputDecoration(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: Color.fromARGB(255, 227, 10, 169)),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: Colors.red),
-            ),
-            filled: true,
-            fillColor: Colors.white,
-          ),
-          validator: validator,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDatePicker({
-    required String label,
-    required TextEditingController controller,
-    String? Function(String?)? validator,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: GoogleFonts.poppins(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: controller,
-          readOnly: true,
-          onTap: () => _selectDate(context, controller),
-          decoration: InputDecoration(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: Color.fromARGB(255, 227, 10, 169)),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: Colors.red),
-            ),
-            filled: true,
-            fillColor: Colors.white,
-            suffixIcon: const Icon(Icons.calendar_today_outlined),
-          ),
-          validator: validator,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSimpleDropdown({
-    required String label,
-    required String value,
-    required List<String> items,
-    required void Function(String?) onChanged,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: GoogleFonts.poppins(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(height: 8),
-        DecoratedBox(
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey[300]!),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: value,
-                isExpanded: true,
-                hint: Text(
-                  'Select ${label}',
-                  style: GoogleFonts.poppins(color: Colors.grey[600]),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Debug timestamp - only visible in debug mode
+                if (kDebugMode)
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Debug Info (${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now().toUtc())})',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        Text('User: darwinacharya3'),
+                        Text('ID: ${_userDetail!.id}'),
+                        Text('API: ${ProfileService.baseUrl}'),
+                      ],
+                    ),
+                  ),
+                
+                GeneralInfoSection(
+                  edituserDetail: _userDetail!,
+                  onSave: _updateGeneralInfo,
+                  countriesMap: _countriesMap,
+                  statesMap: _statesMap,
+                  educationLevels: _educationLevels,
                 ),
-                items: items
-                    .map((item) => DropdownMenuItem<String>(
-                          value: item,
-                          child: Text(item),
-                        ))
-                    .toList(),
-                onChanged: onChanged,
-                icon: const Icon(Icons.keyboard_arrow_down),
-              ),
+                const SizedBox(height: 24),
+                SignatureSection(
+                  edituserDetail: _userDetail!,
+                  onSave: _updateSignature,
+                ),
+                const SizedBox(height: 24),
+                ResidencySection(
+                  edituserDetail: _userDetail!,
+                  onSave: _updateResidencyInfo,
+                  countriesMap: _countriesMap,
+                  statesMap: _statesMap,
+                  visaTypes: _visaTypes,
+                ),
+                const SizedBox(height: 24),
+                EmergencyContactSection(
+                  edituserDetail: _userDetail!,
+                  onSave: _updateEmergencyContact,
+                ),
+                const SizedBox(height: 32),
+                _buildSaveButton(),
+                const SizedBox(height: 32),
+              ],
             ),
           ),
         ),
-      ],
-    );
-  }
-
-  Widget _buildGenderSelection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Gender',
-          style: GoogleFonts.poppins(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Radio(
-              value: '1',
-              groupValue: _selectedGender,
-              activeColor: const Color.fromARGB(255, 227, 10, 169),
-              onChanged: (value) {
-                setState(() {
-                  _selectedGender = value as String;
-                });
-              },
-            ),
-            const Text('Male'),
-            const SizedBox(width: 16),
-            Radio(
-              value: '2',
-              groupValue: _selectedGender,
-              activeColor: const Color.fromARGB(255, 227, 10, 169),
-              onChanged: (value) {
-                setState(() {
-                  _selectedGender = value as String;
-                });
-              },
-            ),
-            const Text('Female'),
-            const SizedBox(width: 16),
-            Radio(
-              value: '3',
-              groupValue: _selectedGender,
-              activeColor: const Color.fromARGB(255, 227, 10, 169),
-              onChanged: (value) {
-                setState(() {
-                  _selectedGender = value as String;
-                });
-              },
-            ),
-            const Text('Other'),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildAustralianResidenceSelection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Are you an Australian permanent residence?',
-          style: GoogleFonts.poppins(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Radio(
-              value: true,
-              groupValue: _isAustralianResident,
-              activeColor: const Color.fromARGB(255, 227, 10, 169),
-              onChanged: (value) {
-                setState(() {
-                  _isAustralianResident = value as bool;
-                });
-              },
-            ),
-            const Text('Yes'),
-            const SizedBox(width: 16),
-            Radio(
-              value: false,
-              groupValue: _isAustralianResident,
-              activeColor: const Color.fromARGB(255, 227, 10, 169),
-              onChanged: (value) {
-                setState(() {
-                  _isAustralianResident = value as bool;
-                });
-              },
-            ),
-            const Text('No'),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildImagePicker() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Image',
-          style: GoogleFonts.poppins(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            ElevatedButton(
-              onPressed: () {
-                // To be implemented with image_picker
-                // For now we just show a message
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Image picker will be integrated later')),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black,
-                side: BorderSide(color: Colors.grey[300]!),
-              ),
-              child: const Text('Choose File'),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                'No file chosen',
-                style: GoogleFonts.poppins(color: Colors.grey[600]),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
-      ],
+      ),
     );
   }
 
@@ -798,7 +627,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         ),
       ),
       style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xFF1976D2), // Blue color from the image
+        backgroundColor: const Color(0xFF1976D2), // Blue color
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(vertical: 16),
         shape: RoundedRectangleBorder(
@@ -808,3 +637,1147 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// import 'dart:io';
+// import 'package:flutter/material.dart';
+// import 'package:flutter/foundation.dart';
+// import 'package:google_fonts/google_fonts.dart';
+// import 'package:intl/intl.dart';
+// import 'package:ems/models/edit_user_details.dart';
+// import 'package:ems/services/edit_profile_service.dart';
+// import 'package:ems/widgets/AMS/edit_profile_widget/residency_section.dart';
+// import 'package:ems/widgets/AMS/edit_profile_widget/general_info_section.dart';
+// import 'package:ems/widgets/AMS/edit_profile_widget/signature_section.dart';
+// import 'package:ems/widgets/AMS/edit_profile_widget/emergency_contact_section.dart';
+// import 'package:ems/utils/responsive_utils.dart';
+// import 'package:ems/widgets/AMS/custom_widgets/custom_app_bar.dart';
+
+// class EditProfileScreen extends StatefulWidget {
+//   // Modified constructor to accept userDetail parameter
+//   final EditUserDetail? userDetail;
+
+//   const EditProfileScreen({
+//     Key? key, 
+//     this.userDetail,
+//   }) : super(key: key);
+
+//   @override
+//   State<EditProfileScreen> createState() => _EditProfileScreenState();
+// }
+
+// class _EditProfileScreenState extends State<EditProfileScreen> {
+//   final _formKey = GlobalKey<FormState>();
+//   final _profileService = ProfileService();
+//   bool _isSubmitting = false;
+//   bool _isLoading = true;
+//   EditUserDetail? _userDetail;
+//   File? _profileImage;
+
+//   // Form data
+//   String _name = '';
+//   String _gender = '1';
+//   String _phone = '';
+//   String _email = '';
+//   String _dob = '';
+//   String _birthCountry = '';
+//   String _birthState = '';
+//   String _homeAddress = '';
+//   String _commencementDate = '';
+//   String _signature = '';
+//   String _isAusPermanentResident = '0';
+//   String _countryOfLiving = '';
+//   String _currentStateId = '';
+//   String _residentialAddress = '';
+//   String _postCode = '';
+//   String _visaType = '';
+//   String _passportNumber = '';
+//   String _passportExpiryDate = '';
+//   String _eContactName = '';
+//   String _relation = '';
+//   String _eContactNo = '';
+//   String _highestEducation = '';
+
+//   // Dynamic data from API
+//   Map<String, String> _countriesMap = {};
+//   Map<String, String> _statesMap = {};
+//   List<String> _educationLevels = [];
+//   List<String> _visaTypes = [];
+
+//   @override
+//   void initState() {
+//     super.initState();
+    
+//     // If widget.userDetail is provided, use it directly
+//     if (widget.userDetail != null) {
+//       _userDetail = widget.userDetail;
+//     }
+    
+//     // Log current user and date information for debugging
+//     _logUserInfo();
+    
+//     // Load all data on startup
+//     _loadAllData();
+//   }
+  
+//   void _logUserInfo() {
+//     final DateTime now = DateTime.now().toUtc();
+//     final String formattedDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
+    
+//     debugPrint('==========================================================');
+//     debugPrint('Current Date and Time (UTC): $formattedDate');
+//     debugPrint('Current User\'s Login: darwinacharya3');
+//     debugPrint('==========================================================');
+//   }
+
+//   Future<void> _loadAllData() async {
+//     setState(() {
+//       _isLoading = true;
+//     });
+
+//     try {
+//       // Log the start of data loading
+//       debugPrint('Starting to load profile data...');
+      
+//       // If we don't already have user detail from constructor, fetch it from API
+//       if (_userDetail == null) {
+//         await _fetchProfileData();
+//       } else {
+//         debugPrint('Using provided userDetail from constructor');
+//       }
+      
+//       // Then load all the supporting data in parallel
+//       await Future.wait([
+//         _fetchCountries(),
+//         _fetchStates(),
+//         _fetchEducationLevels(),
+//         _fetchVisaTypes(),
+//       ]);
+      
+//       // Once all data is loaded, initialize the form
+//       _initializeFormData();
+      
+//       debugPrint('Successfully loaded all profile data');
+//     } catch (e) {
+//       // Log error to console instead of showing snackbar
+//       debugPrint('Error loading data: $e');
+      
+//       if (mounted) {
+//         // Show error message to user
+//         ScaffoldMessenger.of(context).showSnackBar(
+//           SnackBar(
+//             content: Text('Error loading data: ${e.toString()}'),
+//             backgroundColor: Colors.red,
+//           ),
+//         );
+//       }
+//     } finally {
+//       if (mounted) {
+//         setState(() {
+//           _isLoading = false;
+//         });
+//       }
+//     }
+//   }
+
+//   void _initializeFormData() {
+//     if (_userDetail == null) {
+//       debugPrint('Cannot initialize form data: User detail is null');
+//       return;
+//     }
+    
+//     _name = _userDetail!.name;
+//     _gender = _userDetail!.gender;
+//     _phone = _userDetail!.mobileNo;
+//     _email = _userDetail!.email;
+//     _dob = _userDetail!.dob;
+//     _birthCountry = _userDetail!.countryOfBirth;
+//     _birthState = _userDetail!.birthStateId;
+//     _homeAddress = _userDetail!.birthResidentialAddress;
+//     _commencementDate = _userDetail!.commencementDate;
+//     _signature = _userDetail!.signature;
+//     _isAusPermanentResident = _userDetail!.isAusPermanentResident;
+//     _countryOfLiving = _userDetail!.countryOfLiving;
+//     _currentStateId = _userDetail!.currentStateId;
+//     _residentialAddress = _userDetail!.residentialAddress;
+//     _postCode = _userDetail!.postCode;
+//     _visaType = _userDetail!.visaType;
+//     _passportNumber = _userDetail!.passportNumber;
+//     _passportExpiryDate = _userDetail!.passportExpiryDate;
+//     _eContactName = _userDetail!.eContactName;
+//     _relation = _userDetail!.relation;
+//     _eContactNo = _userDetail!.eContactNo;
+//     _highestEducation = _userDetail!.highestEducation;
+    
+//     // Log form data for debugging
+//     debugPrint('Form data initialized:');
+//     debugPrint('Name: $_name');
+//     debugPrint('Email: $_email');
+//     debugPrint('Gender: $_gender');
+//     debugPrint('Editable fields: ${_userDetail!.editableFields}');
+//   }
+
+//   Future<void> _fetchProfileData() async {
+//     try {
+//       debugPrint('Fetching user profile data...');
+//       final userDetail = await _profileService.getUserProfile();
+      
+//       if (mounted) {
+//         setState(() {
+//           _userDetail = userDetail;
+//         });
+//         debugPrint('User profile data received successfully');
+//       }
+//     } catch (e) {
+//       debugPrint('Failed to fetch profile: $e');
+//       rethrow; // Re-throw to be caught by the caller
+//     }
+//   }
+
+//   Future<void> _fetchCountries() async {
+//     try {
+//       debugPrint('Fetching countries data...');
+//       final countries = await _profileService.getCountries();
+      
+//       if (mounted) {
+//         setState(() {
+//           _countriesMap = countries;
+//         });
+//         debugPrint('Countries data received: ${countries.length} countries');
+//       }
+//     } catch (e) {
+//       debugPrint('Failed to fetch countries: $e');
+//       rethrow;
+//     }
+//   }
+
+//   Future<void> _fetchStates() async {
+//     try {
+//       debugPrint('Fetching states data...');
+//       final states = await _profileService.getStates();
+      
+//       if (mounted) {
+//         setState(() {
+//           _statesMap = states;
+//         });
+//         debugPrint('States data received: ${states.length} states');
+//       }
+//     } catch (e) {
+//       debugPrint('Failed to fetch states: $e');
+//       rethrow;
+//     }
+//   }
+
+//   Future<void> _fetchEducationLevels() async {
+//     try {
+//       debugPrint('Fetching education levels...');
+//       final educationLevels = await _profileService.getEducationLevels();
+      
+//       if (mounted) {
+//         setState(() {
+//           _educationLevels = educationLevels;
+//         });
+//         debugPrint('Education levels received: ${educationLevels.length} levels');
+//       }
+//     } catch (e) {
+//       debugPrint('Failed to fetch education levels: $e');
+//       rethrow;
+//     }
+//   }
+
+//   Future<void> _fetchVisaTypes() async {
+//     try {
+//       debugPrint('Fetching visa types...');
+//       final visaTypes = await _profileService.getVisaTypes();
+      
+//       if (mounted) {
+//         setState(() {
+//           _visaTypes = visaTypes;
+//         });
+//         debugPrint('Visa types received: ${visaTypes.length} types');
+//       }
+//     } catch (e) {
+//       debugPrint('Failed to fetch visa types: $e');
+//       rethrow;
+//     }
+//   }
+
+//   Future<void> _saveProfile() async {
+//     if (_userDetail == null) {
+//       debugPrint('Cannot save profile: User detail is null');
+//       return;
+//     }
+    
+//     if (!_formKey.currentState!.validate()) {
+//       debugPrint('Form validation failed');
+//       return;
+//     }
+
+//     setState(() {
+//       _isSubmitting = true;
+//     });
+
+//     try {
+//       debugPrint('==== SUBMITTING PROFILE DATA ====');
+//       final DateTime now = DateTime.now().toUtc();
+//       final String formattedDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
+//       debugPrint('Current Date and Time (UTC): $formattedDate');
+//       debugPrint('Current User\'s Login: darwinacharya3');
+      
+//       // Log all form data for debugging
+//       debugPrint('User ID: ${_userDetail!.userId}');
+//       debugPrint('Student ID: ${_userDetail!.studentId}');
+//       debugPrint('Name: $_name');
+//       debugPrint('Email: $_email');
+//       debugPrint('Gender: $_gender');
+//       debugPrint('Phone: $_phone');
+//       debugPrint('Date of Birth: $_dob');
+//       debugPrint('Country of Birth: $_birthCountry');
+//       debugPrint('Birth State: $_birthState');
+//       debugPrint('Home Address: $_homeAddress');
+//       debugPrint('Commencement Date: $_commencementDate');
+//       debugPrint('Signature: $_signature');
+//       debugPrint('Highest Education: $_highestEducation');
+//       debugPrint('Is AUS Permanent Resident: $_isAusPermanentResident');
+//       debugPrint('Country of Living: $_countryOfLiving');
+//       debugPrint('Residential Address: $_residentialAddress');
+//       debugPrint('Post Code: $_postCode');
+//       debugPrint('Visa Type: $_visaType');
+//       debugPrint('Current State: $_currentStateId');
+//       debugPrint('Passport Number: $_passportNumber');
+//       debugPrint('Passport Expiry Date: $_passportExpiryDate');
+//       debugPrint('Emergency Contact Name: $_eContactName');
+//       debugPrint('Relation: $_relation');
+//       debugPrint('Emergency Contact Number: $_eContactNo');
+//       debugPrint('Profile Image: ${_profileImage?.path ?? "No new image"}');
+      
+//       final success = await _profileService.updateUserProfile(
+//         name: _name,
+//         email: _email,
+//         status: _userDetail!.status,
+//         userId: _userDetail!.userId,
+//         studentId: _userDetail!.studentId,
+//         gender: _gender,
+//         mobileNo: _phone,
+//         dob: _dob,
+//         countryOfBirth: _birthCountry,
+//         birthStateId: _birthState,
+//         birthResidentialAddress: _homeAddress,
+//         commencementDate: _commencementDate,
+//         signature: _signature,
+//         isAusPermanentResident: _isAusPermanentResident,
+//         countryOfLiving: _countryOfLiving,
+//         residentialAddress: _residentialAddress,
+//         postCode: _postCode,
+//         visaType: _visaType,
+//         currentStateId: _currentStateId,
+//         passportNumber: _passportNumber,
+//         passportExpiryDate: _passportExpiryDate,
+//         eContactName: _eContactName,
+//         relation: _relation,
+//         eContactNo: _eContactNo,
+//         highestEducation: _highestEducation,
+//         profileImage: _profileImage,
+//       );
+      
+//       if (mounted) {
+//         if (success) {
+//           debugPrint('Profile updated successfully');
+          
+//           // Show subtle success indicator
+//           ScaffoldMessenger.of(context).showSnackBar(
+//             const SnackBar(
+//               content: Text('Profile updated successfully'),
+//               duration: Duration(seconds: 2),
+//               backgroundColor: Colors.green,
+//             ),
+//           );
+          
+//           // Navigate back after successful update
+//           Navigator.pop(context, true);
+//         } else {
+//           debugPrint('Failed to update profile: API returned unsuccessful status');
+//           setState(() {
+//             _isSubmitting = false;
+//           });
+          
+//           // Show error message
+//           ScaffoldMessenger.of(context).showSnackBar(
+//             const SnackBar(
+//               content: Text('Failed to update profile. Please try again.'),
+//               duration: Duration(seconds: 2),
+//               backgroundColor: Colors.red,
+//             ),
+//           );
+//         }
+//       }
+//     } catch (e) {
+//       debugPrint('Error updating profile: $e');
+      
+//       if (mounted) {
+//         setState(() {
+//           _isSubmitting = false;
+//         });
+        
+//         // Show error message
+//         ScaffoldMessenger.of(context).showSnackBar(
+//           SnackBar(
+//             content: Text('Error: ${e.toString()}'),
+//             duration: const Duration(seconds: 3),
+//             backgroundColor: Colors.red,
+//           ),
+//         );
+//       }
+//     }
+//   }
+
+//   // Rest of the code remains the same...
+  
+//   void _updateGeneralInfo(
+//     String name,
+//     String gender,
+//     String phone,
+//     String email,
+//     String dob,
+//     String birthCountry,
+//     String birthState,
+//     String homeAddress,
+//     String commencementDate,
+//     String highestEducation,
+//     File? profileImage,
+//   ) {
+//     setState(() {
+//       _name = name;
+//       _gender = gender;
+//       _phone = phone;
+//       _email = email;
+//       _dob = dob;
+//       _birthCountry = birthCountry;
+//       _birthState = birthState;
+//       _homeAddress = homeAddress;
+//       _commencementDate = commencementDate;
+//       _highestEducation = highestEducation;
+//       if (profileImage != null) {
+//         _profileImage = profileImage;
+//         debugPrint('Profile image updated in parent: ${profileImage.path}');
+//       }
+//     });
+//   }
+
+//   void _updateSignature(String signature) {
+//     setState(() {
+//       _signature = signature;
+//     });
+//   }
+
+//   void _updateResidencyInfo(
+//     String isAusPermanentResident,
+//     String countryOfLiving,
+//     String currentStateId,
+//     String residentialAddress,
+//     String postCode,
+//     String visaType,
+//     String passportNumber,
+//     String passportExpiryDate,
+//   ) {
+//     setState(() {
+//       _isAusPermanentResident = isAusPermanentResident;
+//       _countryOfLiving = countryOfLiving;
+//       _currentStateId = currentStateId;
+//       _residentialAddress = residentialAddress;
+//       _postCode = postCode;
+//       _visaType = visaType;
+//       _passportNumber = passportNumber;
+//       _passportExpiryDate = passportExpiryDate;
+//     });
+//   }
+
+//   void _updateEmergencyContact(
+//     String eContactName,
+//     String relation,
+//     String eContactNo,
+//   ) {
+//     setState(() {
+//       _eContactName = eContactName;
+//       _relation = relation;
+//       _eContactNo = eContactNo;
+//     });
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: CustomAppBar(
+//         title: 'Edit Profile',
+//         showBackButton: true,
+//       ),
+//       body: _isLoading
+//           ? const Center(
+//               child: Column(
+//                 mainAxisAlignment: MainAxisAlignment.center,
+//                 children: [
+//                   CircularProgressIndicator(),
+//                   SizedBox(height: 16),
+//                   Text('Loading profile data...'),
+//                 ],
+//               ),
+//             )
+//           : _buildForm(),
+//     );
+//   }
+
+//   Widget _buildForm() {
+//     // Check if we have all required data before rendering the form
+//     if (_userDetail == null) {
+//       debugPrint('User detail is null, cannot render form');
+//       return Center(
+//         child: Column(
+//           mainAxisAlignment: MainAxisAlignment.center,
+//           children: [
+//             const Icon(Icons.error_outline, size: 48, color: Colors.red),
+//             const SizedBox(height: 16),
+//             const Text(
+//               'Error: Could not load profile data',
+//               style: TextStyle(fontSize: 18),
+//             ),
+//             const SizedBox(height: 16),
+//             ElevatedButton(
+//               onPressed: _loadAllData,
+//               child: const Text('Try Again'),
+//             ),
+//           ],
+//         ),
+//       );
+//     }
+
+//     final bool hasRequiredData = 
+//         _countriesMap.isNotEmpty && 
+//         _statesMap.isNotEmpty && 
+//         _educationLevels.isNotEmpty && 
+//         _visaTypes.isNotEmpty;
+
+//     if (!hasRequiredData) {
+//       debugPrint('Required data missing, cannot render form');
+//       return Center(
+//         child: Column(
+//           mainAxisAlignment: MainAxisAlignment.center,
+//           children: [
+//             const Icon(Icons.error_outline, size: 48, color: Colors.amber),
+//             const SizedBox(height: 16),
+//             const Text(
+//               'Warning: Some reference data could not be loaded',
+//               style: TextStyle(fontSize: 18),
+//             ),
+//             const SizedBox(height: 16),
+//             ElevatedButton(
+//               onPressed: _loadAllData,
+//               child: const Text('Try Again'),
+//             ),
+//           ],
+//         ),
+//       );
+//     }
+
+//     return Form(
+//       key: _formKey,
+//       child: SingleChildScrollView(
+//         padding: ResponsiveUtils.getScreenPadding(context),
+//         child: Center(
+//           child: ConstrainedBox(
+//             constraints: BoxConstraints(
+//               maxWidth: ResponsiveUtils.getFormWidth(context),
+//             ),
+//             child: Column(
+//               crossAxisAlignment: CrossAxisAlignment.stretch,
+//               children: [
+//                 // Debug timestamp - only visible in debug mode
+//                 if (kDebugMode)
+//                   Container(
+//                     padding: const EdgeInsets.all(8),
+//                     margin: const EdgeInsets.only(bottom: 16),
+//                     decoration: BoxDecoration(
+//                       color: Colors.grey[200],
+//                       borderRadius: BorderRadius.circular(8),
+//                     ),
+//                     child: Column(
+//                       crossAxisAlignment: CrossAxisAlignment.start,
+//                       children: [
+//                         Text(
+//                           'Debug Info (${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now().toUtc())})',
+//                           style: const TextStyle(fontWeight: FontWeight.bold),
+//                         ),
+//                         Text('User: darwinacharya3'),
+//                         Text('ID: ${_userDetail!.id}'),
+//                         Text('API: ${ProfileService.baseUrl}'),
+//                       ],
+//                     ),
+//                   ),
+                
+//                 GeneralInfoSection(
+//                   edituserDetail: _userDetail!,
+//                   onSave: _updateGeneralInfo,
+//                   countriesMap: _countriesMap,
+//                   statesMap: _statesMap,
+//                   educationLevels: _educationLevels,
+//                 ),
+//                 const SizedBox(height: 24),
+//                 SignatureSection(
+//                   edituserDetail: _userDetail!,
+//                   onSave: _updateSignature,
+//                 ),
+//                 const SizedBox(height: 24),
+//                 ResidencySection(
+//                   edituserDetail: _userDetail!,
+//                   onSave: _updateResidencyInfo,
+//                   countriesMap: _countriesMap,
+//                   statesMap: _statesMap,
+//                   visaTypes: _visaTypes,
+//                 ),
+//                 const SizedBox(height: 24),
+//                 EmergencyContactSection(
+//                   edituserDetail: _userDetail!,
+//                   onSave: _updateEmergencyContact,
+//                 ),
+//                 const SizedBox(height: 32),
+//                 _buildSaveButton(),
+//                 const SizedBox(height: 32),
+//               ],
+//             ),
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+
+//   Widget _buildSaveButton() {
+//     return ElevatedButton.icon(
+//       onPressed: _isSubmitting ? null : _saveProfile,
+//       icon: _isSubmitting
+//           ? const SizedBox(
+//               width: 16,
+//               height: 16,
+//               child: CircularProgressIndicator(
+//                 color: Colors.white,
+//                 strokeWidth: 2,
+//               ),
+//             )
+//           : const Icon(Icons.check),
+//       label: Text(
+//         'Save & Continue',
+//         style: GoogleFonts.poppins(
+//           fontSize: 16, 
+//           fontWeight: FontWeight.w500
+//         ),
+//       ),
+//       style: ElevatedButton.styleFrom(
+//         backgroundColor: const Color(0xFF1976D2), // Blue color
+//         foregroundColor: Colors.white,
+//         padding: const EdgeInsets.symmetric(vertical: 16),
+//         shape: RoundedRectangleBorder(
+//           borderRadius: BorderRadius.circular(8),
+//         ),
+//       ),
+//     );
+//   }
+// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// import 'dart:io';
+// import 'package:flutter/material.dart';
+// import 'package:google_fonts/google_fonts.dart';
+// import 'package:ems/models/edit_user_details.dart';
+// import 'package:ems/services/edit_profile_service.dart';
+// import 'package:ems/widgets/AMS/edit_profile_widget/residency_section.dart';
+// import 'package:ems/widgets/AMS/edit_profile_widget/general_info_section.dart';
+// import 'package:ems/widgets/AMS/edit_profile_widget/signature_section.dart';
+// import 'package:ems/widgets/AMS/edit_profile_widget/emergency_contact_section.dart';
+// import 'package:ems/utils/responsive_utils.dart';
+// import 'package:ems/widgets/AMS/custom_widgets/custom_app_bar.dart';
+
+// class EditProfileScreen extends StatefulWidget {
+//   final EditUserDetail userDetail;
+
+//   const EditProfileScreen({
+//     Key? key,
+//     required this.userDetail,
+//   }) : super(key: key);
+
+//   @override
+//   State<EditProfileScreen> createState() => _EditProfileScreenState();
+// }
+
+// class _EditProfileScreenState extends State<EditProfileScreen> {
+//   final _formKey = GlobalKey<FormState>();
+//   final _profileService = ProfileService();
+//   bool _isSubmitting = false;
+//   bool _isLoading = true;
+//   late EditUserDetail _userDetail;
+//   File? _profileImage;
+
+//   // Form data
+//   String _name = '';
+//   String _gender = '1';
+//   String _phone = '';
+//   String _email = '';
+//   String _dob = '';
+//   String _birthCountry = '';
+//   String _birthState = '';
+//   String _homeAddress = '';
+//   String _commencementDate = '';
+//   String _signature = '';
+//   String _isAusPermanentResident = '0';
+//   String _countryOfLiving = '';
+//   String _currentStateId = '';
+//   String _residentialAddress = '';
+//   String _postCode = '';
+//   String _visaType = '';
+//   String _passportNumber = '';
+//   String _passportExpiryDate = '';
+//   String _eContactName = '';
+//   String _relation = '';
+//   String _eContactNo = '';
+//   String _highestEducation = '';
+
+//   // Dynamic data from API
+//   Map<String, String> _countriesMap = {};
+//   Map<String, String> _statesMap = {};
+//   List<String> _educationLevels = [];
+//   List<String> _visaTypes = [];
+
+//   @override
+//   void initState() {
+//     super.initState();
+//     _userDetail = widget.userDetail;
+//     _loadAllData();
+//   }
+
+//   Future<void> _loadAllData() async {
+//     setState(() {
+//       _isLoading = true;
+//     });
+
+//     try {
+//       // Load all required data in parallel
+//       await Future.wait([
+//         _fetchProfileData(),
+//         _fetchCountries(),
+//         _fetchStates(),
+//         _fetchEducationLevels(),
+//         _fetchVisaTypes(),
+//       ]);
+      
+//       // Once all data is loaded, initialize the form
+//       _initializeFormData();
+//     } catch (e) {
+//       if (mounted) {
+//         ScaffoldMessenger.of(context).showSnackBar(
+//           SnackBar(content: Text('Error loading data: ${e.toString()}')),
+//         );
+//       }
+//     } finally {
+//       if (mounted) {
+//         setState(() {
+//           _isLoading = false;
+//         });
+//       }
+//     }
+//   }
+
+//   void _initializeFormData() {
+//     _name = _userDetail.name;
+//     _gender = _userDetail.gender;
+//     _phone = _userDetail.mobileNo;
+//     _email = _userDetail.email;
+//     _dob = _userDetail.dob;
+//     _birthCountry = _userDetail.countryOfBirth;
+//     _birthState = _userDetail.birthStateId;
+//     _homeAddress = _userDetail.birthResidentialAddress;
+//     _commencementDate = _userDetail.commencementDate;
+//     _signature = _userDetail.signature;
+//     _isAusPermanentResident = _userDetail.isAusPermanentResident;
+//     _countryOfLiving = _userDetail.countryOfLiving;
+//     _currentStateId = _userDetail.currentStateId;
+//     _residentialAddress = _userDetail.residentialAddress;
+//     _postCode = _userDetail.postCode;
+//     _visaType = _userDetail.visaType;
+//     _passportNumber = _userDetail.passportNumber;
+//     _passportExpiryDate = _userDetail.passportExpiryDate;
+//     _eContactName = _userDetail.eContactName;
+//     _relation = _userDetail.relation;
+//     _eContactNo = _userDetail.eContactNo;
+//     _highestEducation = _userDetail.highestEducation;
+//   }
+
+//   Future<void> _fetchProfileData() async {
+//     try {
+//       final userDetail = await _profileService.getUserProfile();
+//       if (mounted) {
+//         setState(() {
+//           _userDetail = userDetail;
+//         });
+//       }
+//     } catch (e) {
+//       if (mounted) {
+//         ScaffoldMessenger.of(context).showSnackBar(
+//           SnackBar(content: Text('Failed to fetch profile: ${e.toString()}')),
+//         );
+//       }
+//       rethrow; // Re-throw to be caught by the caller
+//     }
+//   }
+
+//   Future<void> _fetchCountries() async {
+//     try {
+//       final countries = await _profileService.getCountries();
+//       if (mounted) {
+//         setState(() {
+//           _countriesMap = countries;
+//         });
+//       }
+//     } catch (e) {
+//       if (mounted) {
+//         ScaffoldMessenger.of(context).showSnackBar(
+//           SnackBar(content: Text('Failed to fetch countries: ${e.toString()}')),
+//         );
+//       }
+//       rethrow;
+//     }
+//   }
+
+//   Future<void> _fetchStates() async {
+//     try {
+//       final states = await _profileService.getStates();
+//       if (mounted) {
+//         setState(() {
+//           _statesMap = states;
+//         });
+//       }
+//     } catch (e) {
+//       if (mounted) {
+//         ScaffoldMessenger.of(context).showSnackBar(
+//           SnackBar(content: Text('Failed to fetch states: ${e.toString()}')),
+//         );
+//       }
+//       rethrow;
+//     }
+//   }
+
+//   Future<void> _fetchEducationLevels() async {
+//     try {
+//       final educationLevels = await _profileService.getEducationLevels();
+//       if (mounted) {
+//         setState(() {
+//           _educationLevels = educationLevels;
+//         });
+//       }
+//     } catch (e) {
+//       if (mounted) {
+//         ScaffoldMessenger.of(context).showSnackBar(
+//           SnackBar(content: Text('Failed to fetch education levels: ${e.toString()}')),
+//         );
+//       }
+//       rethrow;
+//     }
+//   }
+
+//   Future<void> _fetchVisaTypes() async {
+//     try {
+//       final visaTypes = await _profileService.getVisaTypes();
+//       if (mounted) {
+//         setState(() {
+//           _visaTypes = visaTypes;
+//         });
+//       }
+//     } catch (e) {
+//       if (mounted) {
+//         ScaffoldMessenger.of(context).showSnackBar(
+//           SnackBar(content: Text('Failed to fetch visa types: ${e.toString()}')),
+//         );
+//       }
+//       rethrow;
+//     }
+//   }
+
+//   Future<void> _saveProfile() async {
+//     if (!_formKey.currentState!.validate()) {
+//       // Form validation failed
+//       return;
+//     }
+
+//     setState(() {
+//       _isSubmitting = true;
+//     });
+
+//     try {
+//       final success = await _profileService.updateUserProfile(
+//         name: _name,
+//         email: _email,
+//         status: _userDetail.status,
+//         userId: _userDetail.userId,
+//         studentId: _userDetail.studentId,
+//         gender: _gender,
+//         mobileNo: _phone,
+//         dob: _dob,
+//         countryOfBirth: _birthCountry,
+//         birthStateId: _birthState,
+//         birthResidentialAddress: _homeAddress,
+//         commencementDate: _commencementDate,
+//         signature: _signature,
+//         isAusPermanentResident: _isAusPermanentResident,
+//         countryOfLiving: _countryOfLiving,
+//         residentialAddress: _residentialAddress,
+//         postCode: _postCode,
+//         visaType: _visaType,
+//         currentStateId: _currentStateId,
+//         passportNumber: _passportNumber,
+//         passportExpiryDate: _passportExpiryDate,
+//         eContactName: _eContactName,
+//         relation: _relation,
+//         eContactNo: _eContactNo,
+//         highestEducation: _highestEducation,
+//         profileImage: _profileImage,
+//       );
+      
+//       if (mounted) {
+//         if (success) {
+//           ScaffoldMessenger.of(context).showSnackBar(
+//             const SnackBar(content: Text('Profile updated successfully')),
+//           );
+//           Navigator.pop(context, true);
+//         } else {
+//           ScaffoldMessenger.of(context).showSnackBar(
+//             const SnackBar(content: Text('Failed to update profile')),
+//           );
+//           setState(() {
+//             _isSubmitting = false;
+//           });
+//         }
+//       }
+//     } catch (e) {
+//       if (mounted) {
+//         ScaffoldMessenger.of(context).showSnackBar(
+//           SnackBar(content: Text('Failed to update profile: ${e.toString()}')),
+//         );
+//         setState(() {
+//           _isSubmitting = false;
+//         });
+//       }
+//     }
+//   }
+
+//   void _updateGeneralInfo(
+//     String name,
+//     String gender,
+//     String phone,
+//     String email,
+//     String dob,
+//     String birthCountry,
+//     String birthState,
+//     String homeAddress,
+//     String commencementDate,
+//     String highestEducation,
+//     File? profileImage,
+//   ) {
+//     setState(() {
+//       _name = name;
+//       _gender = gender;
+//       _phone = phone;
+//       _email = email;
+//       _dob = dob;
+//       _birthCountry = birthCountry;
+//       _birthState = birthState;
+//       _homeAddress = homeAddress;
+//       _commencementDate = commencementDate;
+//       _highestEducation = highestEducation;
+//       if (profileImage != null) {
+//         _profileImage = profileImage;
+//       }
+//     });
+//   }
+
+//   void _updateSignature(String signature) {
+//     setState(() {
+//       _signature = signature;
+//     });
+//   }
+
+//   void _updateResidencyInfo(
+//     String isAusPermanentResident,
+//     String countryOfLiving,
+//     String currentStateId,
+//     String residentialAddress,
+//     String postCode,
+//     String visaType,
+//     String passportNumber,
+//     String passportExpiryDate,
+//   ) {
+//     setState(() {
+//       _isAusPermanentResident = isAusPermanentResident;
+//       _countryOfLiving = countryOfLiving;
+//       _currentStateId = currentStateId;
+//       _residentialAddress = residentialAddress;
+//       _postCode = postCode;
+//       _visaType = visaType;
+//       _passportNumber = passportNumber;
+//       _passportExpiryDate = passportExpiryDate;
+//     });
+//   }
+
+//   void _updateEmergencyContact(
+//     String eContactName,
+//     String relation,
+//     String eContactNo,
+//   ) {
+//     setState(() {
+//       _eContactName = eContactName;
+//       _relation = relation;
+//       _eContactNo = eContactNo;
+//     });
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: CustomAppBar(
+//         title: 'Edit Profile',
+//         showBackButton: true,
+//       ),
+//       body: _isLoading
+//           ? const Center(
+//               child: Column(
+//                 mainAxisAlignment: MainAxisAlignment.center,
+//                 children: [
+//                   CircularProgressIndicator(),
+//                   SizedBox(height: 16),
+//                   Text('Loading profile data...'),
+//                 ],
+//               ),
+//             )
+//           : _buildForm(),
+//     );
+//   }
+
+//   Widget _buildForm() {
+//     // Check if we have all required data before rendering the form
+//     final bool hasRequiredData = 
+//         _countriesMap.isNotEmpty && 
+//         _statesMap.isNotEmpty && 
+//         _educationLevels.isNotEmpty && 
+//         _visaTypes.isNotEmpty;
+
+//     if (!hasRequiredData) {
+//       return const Center(
+//         child: Text('Error: Could not load required data'),
+//       );
+//     }
+
+//     return Form(
+//       key: _formKey,
+//       child: SingleChildScrollView(
+//         padding: ResponsiveUtils.getScreenPadding(context),
+//         child: Center(
+//           child: ConstrainedBox(
+//             constraints: BoxConstraints(
+//               maxWidth: ResponsiveUtils.getFormWidth(context),
+//             ),
+//             child: Column(
+//               crossAxisAlignment: CrossAxisAlignment.stretch,
+//               children: [
+//                 GeneralInfoSection(
+//                   edituserDetail: _userDetail,
+//                   onSave: _updateGeneralInfo,
+//                   countriesMap: _countriesMap,
+//                   statesMap: _statesMap,
+//                   educationLevels: _educationLevels,
+//                 ),
+//                 const SizedBox(height: 24),
+//                 SignatureSection(
+//                   edituserDetail: _userDetail,
+//                   onSave: _updateSignature,
+//                 ),
+//                 const SizedBox(height: 24),
+//                 ResidencySection(
+//                   edituserDetail: _userDetail,
+//                   onSave: _updateResidencyInfo,
+//                   countriesMap: _countriesMap,
+//                   statesMap: _statesMap,
+//                   visaTypes: _visaTypes,
+//                 ),
+//                 const SizedBox(height: 24),
+//                 EmergencyContactSection(
+//                   edituserDetail: _userDetail,
+//                   onSave: _updateEmergencyContact,
+//                 ),
+//                 const SizedBox(height: 32),
+//                 _buildSaveButton(),
+//                 const SizedBox(height: 32),
+//               ],
+//             ),
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+
+//   Widget _buildSaveButton() {
+//     return ElevatedButton.icon(
+//       onPressed: _isSubmitting ? null : _saveProfile,
+//       icon: _isSubmitting
+//           ? const SizedBox(
+//               width: 16,
+//               height: 16,
+//               child: CircularProgressIndicator(
+//                 color: Colors.white,
+//                 strokeWidth: 2,
+//               ),
+//             )
+//           : const Icon(Icons.check),
+//       label: Text(
+//         'Save & Continue',
+//         style: GoogleFonts.poppins(
+//           fontSize: 16, 
+//           fontWeight: FontWeight.w500
+//         ),
+//       ),
+//       style: ElevatedButton.styleFrom(
+//         backgroundColor: const Color(0xFF1976D2), // Blue color
+//         foregroundColor: Colors.white,
+//         padding: const EdgeInsets.symmetric(vertical: 16),
+//         shape: RoundedRectangleBorder(
+//           borderRadius: BorderRadius.circular(8),
+//         ),
+//       ),
+//     );
+//   }
+// }
