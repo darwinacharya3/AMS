@@ -5,6 +5,8 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:ems/screens/extratech-oval/membership/membership_card_oval_screen.dart';
 import 'package:ems/services/secure_storage_service.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ems/Providers/Extratech_oval/membership_oval_providers.dart';
 
 class ExtratechOvalScreen extends StatefulWidget {
   const ExtratechOvalScreen({Key? key}) : super(key: key);
@@ -27,6 +29,34 @@ class _ExtratechOvalScreenState extends State<ExtratechOvalScreen> {
     _checkLoginStatus();
   }
 
+  // Reset all form data for clean login/logout experience
+  void _resetAllFormData() {
+    // Get ProviderContainer to access providers
+    final container = ProviderContainer();
+    
+    // Reset personal details
+    container.read(firstNameProvider.notifier).state = '';
+    container.read(middleNameProvider.notifier).state = '';
+    container.read(lastNameProvider.notifier).state = '';
+    container.read(dobProvider.notifier).state = '';
+    container.read(emailProvider.notifier).state = '';
+    container.read(phoneProvider.notifier).state = '';
+    container.read(addressProvider.notifier).state = '';
+    container.read(selectedCountryIdProvider.notifier).state = null;
+    container.read(selectedStateIdProvider.notifier).state = null;
+    container.read(selectedGeneralMembershipTypeProvider.notifier).state = null;
+    container.read(generalPaidAmountProvider.notifier).state = '';
+    
+    // Reset uploaded files
+    container.read(photoProvider.notifier).state = null;
+    container.read(generalPaymentSlipProvider.notifier).state = null;
+    container.read(citizenshipFrontProvider.notifier).state = null;
+    container.read(citizenshipBackProvider.notifier).state = null;
+    container.read(commentsProvider.notifier).state = '';
+    
+    debugPrint('All form data has been completely reset during authentication');
+  }
+
   Future<void> _checkLoginStatus() async {
     setState(() {
       _isLoading = true;
@@ -35,6 +65,9 @@ class _ExtratechOvalScreenState extends State<ExtratechOvalScreen> {
     try {
       final token = await SecureStorageService.getToken();
       final currentUser = FirebaseAuth.instance.currentUser;
+      
+      // Reset previous form data anyway to ensure clean state
+      _resetAllFormData();
       
       // If user is logged in, navigate to membership card screen
       if (token != null && currentUser != null && mounted) {
@@ -82,6 +115,9 @@ class _ExtratechOvalScreenState extends State<ExtratechOvalScreen> {
         debugPrint('Error signing out before sign in: $signOutError');
         // Continue with sign in even if sign out fails
       }
+      
+      // Reset all form data to ensure clean state
+      _resetAllFormData();
       
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
 
@@ -161,6 +197,9 @@ class _ExtratechOvalScreenState extends State<ExtratechOvalScreen> {
         debugPrint('Error signing out before email sign in: $signOutError');
         // Continue with sign in even if sign out fails
       }
+      
+      // Reset all form data to ensure clean state
+      _resetAllFormData();
       
       final UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: _usernameController.text.trim(),
@@ -588,7 +627,6 @@ class _ExtratechOvalScreenState extends State<ExtratechOvalScreen> {
     );
   }
 }
-
 
 
 

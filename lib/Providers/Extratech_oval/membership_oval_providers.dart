@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ems/services/Extratech_oval/membership_card_oval_services.dart';
 import 'package:ems/services/secure_storage_service.dart';
@@ -118,9 +119,9 @@ final submitGeneralMembershipFormProvider = Provider<Future<bool> Function(Map<S
       final result = await GeneralMembershipCardService.submitMembershipApplication(formData);
       ref.read(generalFormSubmissionLoadingProvider.notifier).state = false;
       
-      // Refresh membership card data after submission and properly use the returned value
-      final _ = ref.refresh(generalMembershipCardProvider);
-      debugPrint('Membership card data refreshed after submission');
+      // Refresh membership card data after submission
+      final refreshedCardData = ref.refresh(generalMembershipCardProvider);
+      debugPrint('Membership card data refreshed after submission: ${refreshedCardData.hashCode}');
       
       return result;
     } catch (e) {
@@ -130,17 +131,55 @@ final submitGeneralMembershipFormProvider = Provider<Future<bool> Function(Map<S
   };
 });
 
-// Refresh data provider
+// Utility function to reset all form data - using Ref instead of WidgetRef
+void resetAllFormData(Ref ref) {
+  // Reset personal details
+  ref.read(firstNameProvider.notifier).state = '';
+  ref.read(middleNameProvider.notifier).state = '';
+  ref.read(lastNameProvider.notifier).state = '';
+  ref.read(dobProvider.notifier).state = '';
+  ref.read(emailProvider.notifier).state = '';
+  ref.read(phoneProvider.notifier).state = '';
+  ref.read(addressProvider.notifier).state = '';
+  ref.read(selectedCountryIdProvider.notifier).state = null;
+  ref.read(selectedStateIdProvider.notifier).state = null;
+  ref.read(selectedGeneralMembershipTypeProvider.notifier).state = null;
+  ref.read(generalPaidAmountProvider.notifier).state = '';
+  
+  // Reset documents and comments
+  ref.read(photoProvider.notifier).state = null;
+  ref.read(generalPaymentSlipProvider.notifier).state = null;
+  ref.read(citizenshipFrontProvider.notifier).state = null;
+  ref.read(citizenshipBackProvider.notifier).state = null;
+  ref.read(commentsProvider.notifier).state = '';
+  
+  debugPrint('All form data has been reset using the utility function');
+}
+
+// Provider for resetting form data
+final resetFormDataProvider = Provider<VoidCallback>((ref) {
+  return () => resetAllFormData(ref);
+});
+
+// Refresh data provider - FIXED to use the refresh result values
 final refreshDataProvider = Provider<VoidCallback>((ref) {
   return () {
     GeneralMembershipCardService.clearCache();
     
-    // Properly use the returned values from refresh calls
-    final _ = ref.refresh(countryListProvider);
-    final __ = ref.refresh(generalMembershipTypesProvider);
-    final ___ = ref.refresh(generalMembershipCardProvider);
+    // Refresh all data providers and store the results
+    final countriesRefresh = ref.refresh(countryListProvider);
+    debugPrint('Countries data refreshed: ${countriesRefresh.hashCode}');
     
-    debugPrint('All data providers refreshed');
+    final typesRefresh = ref.refresh(generalMembershipTypesProvider);
+    debugPrint('Membership types refreshed: ${typesRefresh.hashCode}');
+    
+    final cardRefresh = ref.refresh(generalMembershipCardProvider);
+    debugPrint('Membership card refreshed: ${cardRefresh.hashCode}');
+    
+    // Reset form data
+    resetAllFormData(ref);
+    
+    debugPrint('All data providers refreshed and form data reset');
   };
 });
 
@@ -150,13 +189,45 @@ final formValidationErrorProvider = StateProvider<String>((ref) => '');
 // Track whether the form was submitted
 final formSubmittedProvider = StateProvider<bool>((ref) => false);
 
+// Add a provider to check if reset is needed (useful when navigating between screens)
+final resetNeededProvider = StateProvider<bool>((ref) => false);
 
+// Provider for global app status (e.g., authentication changes)
+final appStatusProvider = StateProvider<String>((ref) => 'initialized');
 
+// Provider to manage a user's session lifecycle
+final sessionManagerProvider = Provider<SessionManager>((ref) {
+  return SessionManager(ref);
+});
 
+// Session manager class to handle session-related operations
+class SessionManager {
+  final Ref ref; // Using Ref instead of ProviderRef
 
+  SessionManager(this.ref);
 
+  // Call this when user logs in
+  void onLogin(String email) {
+    // Reset all previous user data
+    resetAllFormData(ref);
+    ref.read(appStatusProvider.notifier).state = 'logged_in';
+    debugPrint('User logged in: $email - all data reset');
+  }
 
+  // Call this when user logs out
+  void onLogout() {
+    resetAllFormData(ref);
+    ref.read(appStatusProvider.notifier).state = 'logged_out';
+    debugPrint('User logged out - all data reset');
+  }
 
-
-
-
+  // Call this on app startup to check session
+  Future<void> checkSession() async {
+    final isAuthenticated = await ref.read(isAuthenticatedProvider.future);
+    if (isAuthenticated) {
+      ref.read(appStatusProvider.notifier).state = 'logged_in';
+    } else {
+      ref.read(appStatusProvider.notifier).state = 'logged_out';
+    }
+  }
+}

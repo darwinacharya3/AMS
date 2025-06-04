@@ -48,8 +48,7 @@ class _MembershipDocumentsState extends ConsumerState<MembershipDocuments> {
         _buildFileUpload(
           title: 'Payment Slip',
           file: paymentSlip,
-          onUploadGallery: () => _pickImage(ImageSource.gallery, 'payment_slip'),
-          onUploadCamera: () => _pickImage(ImageSource.camera, 'payment_slip'),
+          onPickImage: (source) => _pickImage(source, 'payment_slip'),
           onDelete: paymentSlip != null ? () => _deleteFile('payment_slip') : null,
         ),
         const SizedBox(height: 16),
@@ -61,8 +60,7 @@ class _MembershipDocumentsState extends ConsumerState<MembershipDocuments> {
         _buildFileUpload(
           title: 'Your Photo',
           file: photo,
-          onUploadGallery: () => _pickImage(ImageSource.gallery, 'photo'),
-          onUploadCamera: () => _pickImage(ImageSource.camera, 'photo'),
+          onPickImage: (source) => _pickImage(source, 'photo'),
           onDelete: photo != null ? () => _deleteFile('photo') : null,
         ),
         const SizedBox(height: 12),
@@ -71,8 +69,7 @@ class _MembershipDocumentsState extends ConsumerState<MembershipDocuments> {
         _buildFileUpload(
           title: 'Citizenship Front',
           file: citizenshipFront,
-          onUploadGallery: () => _pickImage(ImageSource.gallery, 'citizenship_front'),
-          onUploadCamera: () => _pickImage(ImageSource.camera, 'citizenship_front'),
+          onPickImage: (source) => _pickImage(source, 'citizenship_front'),
           onDelete: citizenshipFront != null ? () => _deleteFile('citizenship_front') : null,
         ),
         const SizedBox(height: 12),
@@ -81,8 +78,7 @@ class _MembershipDocumentsState extends ConsumerState<MembershipDocuments> {
         _buildFileUpload(
           title: 'Citizenship Back',
           file: citizenshipBack,
-          onUploadGallery: () => _pickImage(ImageSource.gallery, 'citizenship_back'),
-          onUploadCamera: () => _pickImage(ImageSource.camera, 'citizenship_back'),
+          onPickImage: (source) => _pickImage(source, 'citizenship_back'),
           onDelete: citizenshipBack != null ? () => _deleteFile('citizenship_back') : null,
         ),
         const SizedBox(height: 16),
@@ -212,6 +208,95 @@ class _MembershipDocumentsState extends ConsumerState<MembershipDocuments> {
     }
   }
 
+  // Show image source selection modal
+  void _showImageSourceOptions(Function(ImageSource) onPickImage) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Select Image Source',
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF205EB5),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF205EB5).withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.photo_library_outlined,
+                      color: Color(0xFF205EB5),
+                      size: 24,
+                    ),
+                  ),
+                  title: Text(
+                    'Gallery',
+                    style: GoogleFonts.poppins(),
+                  ),
+                  subtitle: Text(
+                    'Choose from your photos',
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    onPickImage(ImageSource.gallery);
+                  },
+                ),
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF205EB5).withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.camera_alt_outlined,
+                      color: Color(0xFF205EB5),
+                      size: 24,
+                    ),
+                  ),
+                  title: Text(
+                    'Camera',
+                    style: GoogleFonts.poppins(),
+                  ),
+                  subtitle: Text(
+                    'Take a new photo',
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    onPickImage(ImageSource.camera);
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   // Delete uploaded file
   void _deleteFile(String fileType) {
     setState(() {
@@ -230,6 +315,118 @@ class _MembershipDocumentsState extends ConsumerState<MembershipDocuments> {
           break;
       }
     });
+  }
+
+  // Build file upload container with SMALLER UPLOAD BUTTON
+  Widget _buildFileUpload({
+    required String title,
+    required File? file,
+    required Function(ImageSource) onPickImage,
+    required VoidCallback? onDelete,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: GoogleFonts.poppins(
+            fontSize: 14,
+            color: Colors.grey[700],
+          ),
+        ),
+        const SizedBox(height: 8),
+        
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(
+            vertical: 12,
+            horizontal: 16,
+          ),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            children: [
+              // File name or "No file selected"
+              Expanded(
+                child: file == null
+                  ? Text(
+                      'No file selected',
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color: Colors.grey,
+                      ),
+                    )
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          file.path.split('/').last,
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            color: Colors.black87,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (onDelete != null)
+                          GestureDetector(
+                            onTap: onDelete,
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 4.0),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.delete_outline,
+                                    color: Colors.red[400],
+                                    size: 16,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Remove',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 12,
+                                      color: Colors.red[400],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+              ),
+              
+              // Smaller Upload Icon Button
+              IconButton(
+                onPressed: () => _showImageSourceOptions(onPickImage),
+                icon: const Icon(
+                  Icons.upload_file_rounded,
+                  size: 20,
+                  color: Color(0xFF205EB5),
+                ),
+                tooltip: 'Upload file',
+                constraints: const BoxConstraints(),
+                padding: const EdgeInsets.all(6),
+                splashRadius: 24,
+                style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.all(
+                    const Color(0xFF205EB5).withOpacity(0.1),
+                  ),
+                  shape: MaterialStateProperty.all(
+                    RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 
   // Form submission with improved data handling
@@ -334,6 +531,9 @@ class _MembershipDocumentsState extends ConsumerState<MembershipDocuments> {
       final result = await submitForm(formData);
       
       if (result) {
+        // Reset ALL form data after successful submission
+        _resetAllFormData();
+        
         setState(() {
           showSuccessMessage = true;
           isSubmitting = false;
@@ -349,9 +549,6 @@ class _MembershipDocumentsState extends ConsumerState<MembershipDocuments> {
             );
           }
         });
-        
-        // Reset form after successful submission
-        _resetForm();
       }
     } catch (e) {
       setState(() {
@@ -372,14 +569,29 @@ class _MembershipDocumentsState extends ConsumerState<MembershipDocuments> {
     }
   }
   
-  // Reset form after successful submission
-  void _resetForm() {
+  // Reset ALL form data completely - both documents and personal details
+  void _resetAllFormData() {
+    // Reset personal details
+    ref.read(firstNameProvider.notifier).state = '';
+    ref.read(middleNameProvider.notifier).state = '';
+    ref.read(lastNameProvider.notifier).state = '';
+    ref.read(dobProvider.notifier).state = '';
+    ref.read(emailProvider.notifier).state = '';
+    ref.read(phoneProvider.notifier).state = '';
+    ref.read(addressProvider.notifier).state = '';
+    ref.read(selectedCountryIdProvider.notifier).state = null;
+    ref.read(selectedStateIdProvider.notifier).state = null;
+    ref.read(selectedGeneralMembershipTypeProvider.notifier).state = null;
+    ref.read(generalPaidAmountProvider.notifier).state = '';
+    
+    // Reset documents and comments
     ref.read(photoProvider.notifier).state = null;
     ref.read(generalPaymentSlipProvider.notifier).state = null;
     ref.read(citizenshipFrontProvider.notifier).state = null;
     ref.read(citizenshipBackProvider.notifier).state = null;
     ref.read(commentsProvider.notifier).state = '';
-    // We don't reset personal details as the user might want to submit another application with the same details
+    
+    debugPrint('All form data has been completely reset');
   }
 
   // Success message
@@ -427,6 +639,7 @@ class _MembershipDocumentsState extends ConsumerState<MembershipDocuments> {
               setState(() {
                 showSuccessMessage = false;
               });
+              // Use the onPrevious callback to navigate back to the personal details step
               widget.onPrevious();
             },
             style: TextButton.styleFrom(
@@ -505,152 +718,6 @@ class _MembershipDocumentsState extends ConsumerState<MembershipDocuments> {
     );
   }
 
-  // Build file upload container
-  Widget _buildFileUpload({
-    required String title,
-    required File? file,
-    required VoidCallback onUploadGallery,
-    required VoidCallback onUploadCamera,
-    required VoidCallback? onDelete,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: GoogleFonts.poppins(
-            fontSize: 14,
-            color: Colors.grey[700],
-          ),
-        ),
-        const SizedBox(height: 8),
-        
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(
-            vertical: 12,
-            horizontal: 16,
-          ),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (file == null)
-                Text(
-                  'No file selected',
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    color: Colors.grey,
-                  ),
-                )
-              else
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        file.path.split('/').last,
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          color: Colors.black87,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    if (onDelete != null)
-                      IconButton(
-                        onPressed: onDelete,
-                        icon: Icon(
-                          Icons.delete_outline,
-                          color: Colors.red[400],
-                          size: 20,
-                        ),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                      ),
-                  ],
-                ),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  InkWell(
-                    onTap: onUploadGallery,
-                    borderRadius: BorderRadius.circular(8),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF205EB5).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.photo_library_outlined,
-                            size: 18,
-                            color: Color(0xFF205EB5),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            'Gallery',
-                            style: GoogleFonts.poppins(
-                              fontSize: 14,
-                              color: const Color(0xFF205EB5),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  InkWell(
-                    onTap: onUploadCamera,
-                    borderRadius: BorderRadius.circular(8),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF205EB5),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.camera_alt_outlined,
-                            size: 18,
-                            color: Colors.white,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            'Camera',
-                            style: GoogleFonts.poppins(
-                              fontSize: 14,
-                              color: Colors.white,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
   // Build text form field
   Widget _buildTextFormField({
     required String labelText,
@@ -680,20 +747,3 @@ class _MembershipDocumentsState extends ConsumerState<MembershipDocuments> {
     );
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
