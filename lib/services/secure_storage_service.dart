@@ -6,14 +6,18 @@ class SecureStorageService {
   static const _emailKey = 'user_email';
   static const _passwordKey = 'user_password';
   static const _tokenKey = 'auth_token';
-  static const _userIdKey = 'user_id'; // Added for user ID
+  static const _userIdKey = 'user_id'; 
+  static const _uuidKey = 'attendance_uuid';
 
   static Future<void> saveUserEmail(String email) async {
     await _storage.write(key: _emailKey, value: email);
+    debugPrint('User email saved: $email');
   }
 
   static Future<String?> getUserEmail() async {
-    return await _storage.read(key: _emailKey);
+    final email = await _storage.read(key: _emailKey);
+    debugPrint('Retrieved user email: $email');
+    return email;
   }
   
   static Future<void> saveUserPassword(String password) async {
@@ -27,6 +31,7 @@ class SecureStorageService {
   static Future<void> saveUserCredentials(String email, String password) async {
     await _storage.write(key: _emailKey, value: email);
     await _storage.write(key: _passwordKey, value: password);
+    debugPrint('User credentials saved');
   }
 
   // User ID methods
@@ -44,14 +49,30 @@ class SecureStorageService {
   // Token handling
   static Future<void> saveToken(String token) async {
     await _storage.write(key: _tokenKey, value: token);
+    debugPrint('Auth token saved');
   }
 
   static Future<String?> getToken() async {
-    return await _storage.read(key: _tokenKey);
+    final token = await _storage.read(key: _tokenKey);
+    debugPrint('Auth token retrieved: ${token != null ? 'exists' : 'null'}');
+    return token;
   }
 
   static Future<void> clearCredentials() async {
     await _storage.deleteAll();
+    debugPrint('All secure storage data cleared');
+  }
+  
+  // UUID methods
+  static Future<void> saveUuid(String uuid) async {
+    await _storage.write(key: _uuidKey, value: uuid);
+    debugPrint('UUID saved to secure storage: $uuid');
+  }
+
+  static Future<String?> getUuid() async {
+    final uuid = await _storage.read(key: _uuidKey);
+    debugPrint('Retrieved UUID from storage: $uuid');
+    return uuid;
   }
   
   // Debug method to print all stored values
@@ -75,23 +96,114 @@ class SecureStorageService {
     
     debugPrint('========== END SECURE STORAGE DEBUG ==========');
   }
-  // Add this somewhere after the other constants
-  // Add this to your constants
-static const _uuidKey = 'attendance_uuid';
-
-// Add these methods to SecureStorageService
-static Future<void> saveUuid(String uuid) async {
-  await _storage.write(key: _uuidKey, value: uuid);
-  debugPrint('UUID saved to secure storage: $uuid');
 }
 
-static Future<String?> getUuid() async {
-  final uuid = await _storage.read(key: _uuidKey);
-  debugPrint('Retrieved UUID from storage: $uuid');
-  return uuid;
-}
 
-}
+
+
+
+
+
+
+
+
+
+
+
+// import 'package:flutter/material.dart';
+// import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
+// class SecureStorageService {
+//   static const _storage = FlutterSecureStorage();
+//   static const _emailKey = 'user_email';
+//   static const _passwordKey = 'user_password';
+//   static const _tokenKey = 'auth_token';
+//   static const _userIdKey = 'user_id'; // Added for user ID
+
+//   static Future<void> saveUserEmail(String email) async {
+//     await _storage.write(key: _emailKey, value: email);
+//   }
+
+//   static Future<String?> getUserEmail() async {
+//     return await _storage.read(key: _emailKey);
+//   }
+  
+//   static Future<void> saveUserPassword(String password) async {
+//     await _storage.write(key: _passwordKey, value: password);
+//   }
+
+//   static Future<String?> getUserPassword() async {
+//     return await _storage.read(key: _passwordKey);
+//   }
+
+//   static Future<void> saveUserCredentials(String email, String password) async {
+//     await _storage.write(key: _emailKey, value: email);
+//     await _storage.write(key: _passwordKey, value: password);
+//   }
+
+//   // User ID methods
+//   static Future<void> saveUserId(String userId) async {
+//     await _storage.write(key: _userIdKey, value: userId);
+//     debugPrint('User ID saved to secure storage: $userId');
+//   }
+
+//   static Future<String?> getUserId() async {
+//     final userId = await _storage.read(key: _userIdKey);
+//     debugPrint('Retrieved user ID from storage: $userId');
+//     return userId;
+//   }
+
+//   // Token handling
+//   static Future<void> saveToken(String token) async {
+//     await _storage.write(key: _tokenKey, value: token);
+//   }
+
+//   static Future<String?> getToken() async {
+//     return await _storage.read(key: _tokenKey);
+//   }
+
+//   static Future<void> clearCredentials() async {
+//     await _storage.deleteAll();
+//   }
+  
+//   // Debug method to print all stored values
+//   static Future<void> debugPrintAllStoredValues() async {
+//     final keys = await _storage.readAll();
+//     debugPrint('========== SECURE STORAGE DEBUG ==========');
+//     debugPrint('Total items in secure storage: ${keys.length}');
+    
+//     for (var entry in keys.entries) {
+//       String value = entry.value;
+//       // Truncate long values like tokens
+//       if (value.length > 20) {
+//         value = '${value.substring(0, 20)}...';
+//       }
+//       debugPrint('${entry.key}: $value');
+//     }
+    
+//     // Specifically check for user ID
+//     final userId = await getUserId();
+//     debugPrint('User ID specifically: $userId');
+    
+//     debugPrint('========== END SECURE STORAGE DEBUG ==========');
+//   }
+//   // Add this somewhere after the other constants
+//   // Add this to your constants
+// static const _uuidKey = 'attendance_uuid';
+
+// // Add these methods to SecureStorageService
+// static Future<void> saveUuid(String uuid) async {
+//   await _storage.write(key: _uuidKey, value: uuid);
+//   debugPrint('UUID saved to secure storage: $uuid');
+// }
+
+// static Future<String?> getUuid() async {
+//   final uuid = await _storage.read(key: _uuidKey);
+//   debugPrint('Retrieved UUID from storage: $uuid');
+//   return uuid;
+// }
+
+// }
 
 
 

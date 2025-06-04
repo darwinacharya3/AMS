@@ -6,7 +6,7 @@ import 'package:ems/screens/AMS/home/dashboard_screen.dart';
 import 'package:ems/widgets/AMS/custom_widgets/dashboard_drawer.dart';
 import 'package:ems/widgets/AMS/custom_widgets/custom_app_bar.dart';
 import 'package:ems/widgets/AMS/custom_widgets/custom_navigation.dart';
-import 'package:ems/Providers/membership_card_providers.dart';
+import 'package:ems/Providers/AMS/membership_card_providers.dart';
 
 // Import the widgets
 import 'package:ems/widgets/AMS/membership_widgets/membership_card_widget.dart';

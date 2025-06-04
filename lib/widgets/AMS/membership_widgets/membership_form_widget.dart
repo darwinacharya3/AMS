@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:ems/Providers/membership_card_providers.dart';
+import 'package:ems/Providers/AMS/membership_card_providers.dart';
 
 class MembershipForm extends ConsumerWidget {
   final List<Map<String, dynamic>> membershipTypes;

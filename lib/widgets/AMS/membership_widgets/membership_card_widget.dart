@@ -227,34 +227,43 @@ class _MembershipCardDisplayState extends ConsumerState<MembershipCardDisplay> w
         
         const SizedBox(height: 8),
         
-        // Subtitle with active/inactive status
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                'Your Digital Membership Card is ${isActive ? 'Active' : 'Inactive'}. Now, you are eligible to get all the membership benefits of Extratech Oval International Cricket Stadium',
-                style: GoogleFonts.poppins(
-                  fontSize: subtitleSize,
-                  color: Colors.black87,
+        // ENHANCED: Single row with inline badge - FIXED
+        RichText(
+          text: TextSpan(
+            style: GoogleFonts.poppins(
+              fontSize: subtitleSize,
+              color: Colors.black87,
+            ),
+            children: [
+              const TextSpan(text: 'Your Digital Membership Card is '),
+              
+              // Inline badge for Active/Inactive status
+              WidgetSpan(
+                alignment: PlaceholderAlignment.middle,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: isActive ? Colors.green.shade100 : Colors.red.shade100,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isActive ? Colors.green.shade300 : Colors.red.shade300,
+                      width: 1,
+                    ),
+                  ),
+                  child: Text(
+                    isActive ? 'Active' : 'Inactive',
+                    style: GoogleFonts.poppins(
+                      fontSize: subtitleSize * 0.9,
+                      fontWeight: FontWeight.w600,
+                      color: isActive ? Colors.green.shade800 : Colors.red.shade800,
+                    ),
+                  ),
                 ),
               ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: isActive ? Colors.green.shade100 : Colors.red.shade100,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Text(
-                isActive ? 'Active' : 'Inactive',
-                style: GoogleFonts.poppins(
-                  fontSize: subtitleSize,
-                  fontWeight: FontWeight.w600,
-                  color: isActive ? Colors.green.shade800 : Colors.red.shade800,
-                ),
-              ),
-            ),
-          ],
+              
+              const TextSpan(text: '. Now, you are eligible to get all the membership benefits of Extratech Oval International Cricket Stadium'),
+            ],
+          ),
         ),
         
         const SizedBox(height: 16),
@@ -275,13 +284,11 @@ class _MembershipCardDisplayState extends ConsumerState<MembershipCardDisplay> w
                 // Main card body with FIXED gradient background matching CSS exactly
                 Container(
                   decoration: BoxDecoration(
-                    // FIXED: Gradient now matches CSS linear-gradient(157deg, ...)
+                    // FIXED: Correct gradient direction - blue on left, pink on right
                     gradient: LinearGradient(
                       transform: GradientRotation(157 * 3.14159 / 180), // Convert 157deg to radians
                       begin: Alignment.bottomLeft,
                       end: Alignment.topLeft,
-                     
-                      
                       stops: const [0.0, 0.37, 1.0], // Exact stops from CSS
                       colors: [
                         primaryBlue,    // rgb(39 94 174) at 0%
@@ -293,23 +300,22 @@ class _MembershipCardDisplayState extends ConsumerState<MembershipCardDisplay> w
                   padding: const EdgeInsets.all(16),
                   child: Stack(
                     children: [
-                      // FIXED: OVAL watermark - MUCH LARGER SIZE
+                      // FIXED: Enhanced watermark visibility
                       if (logoImageBytes != null)
                         Positioned(
-                          left: -30,    // Extended further left
-                          right: 100,   // Reduced right margin for more space
+                          left: -20,    // Extended further left for better coverage
+                          right: 100,    // Adjusted right margin
                           top: -20,     // Extended up
                           bottom: -40,  // Extended down
                           child: Opacity(
-                            opacity: 0.6, // Slightly more visible
+                            opacity: 0.7, // Optimized opacity for visibility without overwhelming content
                             child: Center(
                               child: Transform.scale(
-                                scale: 0.8, // MUCH larger watermark (increased from default)
+                                scale: 0.75, // Large watermark size
                                 child: Image.memory(
                                   logoImageBytes,
                                   fit: BoxFit.contain,
-                                  color: Colors.white.withOpacity(0.2),
-                                  colorBlendMode: BlendMode.srcATop,
+                                  // FIXED: Removed problematic color blending for natural visibility
                                 ),
                               ),
                             ),
@@ -578,7 +584,7 @@ class _MembershipCardDisplayState extends ConsumerState<MembershipCardDisplay> w
         Container(
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(color: Colors.white, width: 3), // Increased width for more prominent border
+            border: Border.all(color: Colors.white, width: 3), // Enhanced border
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.2),
@@ -683,7 +689,7 @@ class _MembershipCardDisplayState extends ConsumerState<MembershipCardDisplay> w
               
               const SizedBox(height: 4),
               
-              // Member type - without Active badge
+              // Member type
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
@@ -720,7 +726,7 @@ class _MembershipCardDisplayState extends ConsumerState<MembershipCardDisplay> w
   }
 
   Widget _buildDetailsSection() {
-    // Use consistent font sizes with more spacing between labels and values
+    // Use consistent font sizes with proper spacing
     const double labelSize = 12.0; 
     const double valueSize = 12.0;
     
@@ -828,6 +834,849 @@ class _MembershipCardDisplayState extends ConsumerState<MembershipCardDisplay> w
     }
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+// import 'dart:convert';
+// import 'package:flutter/material.dart';
+// import 'package:flutter/services.dart';
+// import 'package:flutter_svg/flutter_svg.dart';
+// import 'package:google_fonts/google_fonts.dart';
+// import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+// // Local providers for the card widget
+// final cardSvgContentProvider = StateProvider.autoDispose<String?>((ref) => null);
+// final cardMembershipTypeProvider = StateProvider.autoDispose<String?>((ref) => 'Member');
+// final cardLogoImageBytesProvider = StateProvider.autoDispose<Uint8List?>((ref) => null);
+// final memberIconBytesProvider = StateProvider.autoDispose<Uint8List?>((ref) => null);
+// final emailIconBytesProvider = StateProvider.autoDispose<Uint8List?>((ref) => null);
+// final isDownloadingProvider = StateProvider.autoDispose<bool>((ref) => false);
+
+// class MembershipCardDisplay extends ConsumerStatefulWidget {
+//   final Map<String, dynamic> cardData;
+//   final List<Map<String, dynamic>>? membershipTypes;
+
+//   const MembershipCardDisplay({
+//     super.key, 
+//     required this.cardData, 
+//     this.membershipTypes,
+//   });
+  
+//   @override
+//   ConsumerState<MembershipCardDisplay> createState() => _MembershipCardDisplayState();
+// }
+
+// class _MembershipCardDisplayState extends ConsumerState<MembershipCardDisplay> with SingleTickerProviderStateMixin {
+//   // Colors from design - exactly as specified in your CSS
+//   final Color primaryBlue = const Color.fromRGBO(39, 94, 174, 1);    // rgb(39 94 174)
+//   final Color secondaryBlue = const Color.fromRGBO(47, 100, 170, 1); // rgb(47 100 170) 
+//   final Color pinkColor = const Color.fromRGBO(220, 47, 160, 1);     // rgba(220, 47, 160, 1)
+//   final Color textColor = Colors.white;
+//   final Color pinkBackground = const Color(0xD6FFA3E6); // rgba(255, 163, 230, 0.84)
+//   final Color sloganTextColor = const Color(0xFF1e4c84);
+
+//   // Card key for screenshots
+//   final GlobalKey _cardKey = GlobalKey();
+  
+//   // Animation controller
+//   AnimationController? _animationController;
+//   Animation<double>? _fadeAnimation;
+  
+//   @override
+//   void initState() {
+//     super.initState();
+    
+//     // Initialize the animation controller
+//     _animationController = AnimationController(
+//       duration: const Duration(milliseconds: 800),
+//       vsync: this,
+//     );
+    
+//     // Initialize the fade animation
+//     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+//       CurvedAnimation(
+//         parent: _animationController!,
+//         curve: Curves.easeIn,
+//       ),
+//     );
+    
+//     // Start the animation
+//     _animationController!.forward();
+    
+//     // Use postFrameCallback to update providers AFTER build is complete
+//     WidgetsBinding.instance.addPostFrameCallback((_) {
+//       _processQrCode();
+//       _getMembershipTypeName();
+//       _loadAssets();
+//     });
+    
+//     // Explicitly allow screenshots
+//     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    
+//     // Disable secure display flags
+//     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+//       systemStatusBarContrastEnforced: false,
+//     ));
+//   }
+  
+//   @override
+//   void dispose() {
+//     _animationController?.dispose();
+//     super.dispose();
+//   }
+  
+//   Future<void> _loadAssets() async {
+//     try {
+//       // Load watermark logo
+//       final ByteData logoData = await rootBundle.load('assets/card/oval.png');
+//       if (mounted) {
+//         ref.read(cardLogoImageBytesProvider.notifier).state = logoData.buffer.asUint8List();
+//       }
+      
+//       // Load member icon
+//       final ByteData memberIconData = await rootBundle.load('assets/card/member_icon.png');
+//       if (mounted) {
+//         ref.read(memberIconBytesProvider.notifier).state = memberIconData.buffer.asUint8List();
+//       }
+      
+//       // Load email icon
+//       final ByteData emailIconData = await rootBundle.load('assets/card/email_icon.png');
+//       if (mounted) {
+//         ref.read(emailIconBytesProvider.notifier).state = emailIconData.buffer.asUint8List();
+//       }
+      
+//     } catch (e) {
+//       debugPrint('Error loading assets: $e');
+      
+//       // Try alternate paths if main paths fail
+//       _tryAlternativeAssetPaths();
+//     }
+//   }
+  
+//   Future<void> _tryAlternativeAssetPaths() async {
+//     try {
+//       final List<String> possiblePaths = [
+//         'assets/Oval Logo.png',
+//         'assets/images/Oval Logo.png',
+//         'assets/extratech-oval-logo.png',
+//       ];
+      
+//       for (final path in possiblePaths) {
+//         try {
+//           final ByteData data = await rootBundle.load(path);
+//           if (mounted) {
+//             ref.read(cardLogoImageBytesProvider.notifier).state = data.buffer.asUint8List();
+//             break;
+//           }
+//         } catch (e) {
+//           // Continue to next path
+//         }
+//       }
+//     } catch (e) {
+//       debugPrint('Error loading alternative assets: $e');
+//     }
+//   }
+  
+//   void _getMembershipTypeName() {
+//     final cardTypeId = widget.cardData['card_type_id'];
+//     String? typeName;
+    
+//     if (cardTypeId != null && widget.membershipTypes != null) {
+//       for (final type in widget.membershipTypes!) {
+//         if (type['id'] == cardTypeId) {
+//           typeName = type['type'];
+//           break;
+//         }
+//       }
+//     }
+    
+//     if (mounted) {
+//       ref.read(cardMembershipTypeProvider.notifier).state = 
+//         typeName ?? widget.cardData['card_type'] ?? 'Member';
+//     }
+//   }
+  
+//   void _processQrCode() {
+//     if (!mounted) return;
+    
+//     if (widget.cardData.containsKey('qr_code')) {
+//       try {
+//         final qrCodeData = widget.cardData['qr_code'].toString();
+        
+//         if (qrCodeData.startsWith('data:image/svg+xml;base64,')) {
+//           final base64String = qrCodeData.split('base64,')[1];
+//           final bytes = base64Decode(base64String);
+//           final svgString = utf8.decode(bytes);
+          
+//           ref.read(cardSvgContentProvider.notifier).state = svgString;
+//         }
+//       } catch (e) {
+//         debugPrint('Error processing QR: $e');
+//       }
+//     }
+//   }
+  
+//   void _downloadCard() {
+//     ref.read(isDownloadingProvider.notifier).state = true;
+    
+//     // Simulate a delay and reset the state
+//     Future.delayed(const Duration(seconds: 1), () {
+//       if (mounted) {
+//         ref.read(isDownloadingProvider.notifier).state = false;
+//         ScaffoldMessenger.of(context).showSnackBar(
+//           const SnackBar(content: Text('Card downloaded successfully')),
+//         );
+//       }
+//     });
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     // Get state from providers
+//     final svgContent = ref.watch(cardSvgContentProvider);
+//     final membershipTypeName = ref.watch(cardMembershipTypeProvider);
+//     final logoImageBytes = ref.watch(cardLogoImageBytesProvider);
+//     final memberIconBytes = ref.watch(memberIconBytesProvider);
+//     final emailIconBytes = ref.watch(emailIconBytesProvider);
+//     final isDownloading = ref.watch(isDownloadingProvider);
+    
+//     final bool isApproved = widget.cardData['status'] == 1 || widget.cardData['status'] == 4;
+//     final bool isActive = widget.cardData['is_active'] == 1;
+    
+//     if (!isApproved) {
+//       return _buildPendingApplicationView();
+//     }
+    
+//     final screenWidth = MediaQuery.of(context).size.width;
+//     final double titleSize = screenWidth * 0.05;
+//     final double subtitleSize = screenWidth * 0.032;
+    
+//     Widget content = Column(
+//       crossAxisAlignment: CrossAxisAlignment.start,
+//       children: [
+//         // Header section
+//         Text(
+//           'Digital Membership Card',
+//           style: GoogleFonts.poppins(
+//             fontSize: titleSize,
+//             fontWeight: FontWeight.w600,
+//             color: primaryBlue,
+//           ),
+//         ),
+        
+//         const SizedBox(height: 8),
+        
+//         // Subtitle with active/inactive status
+//         Row(
+//           children: [
+//             Expanded(
+//               child: Text(
+//                 'Your Digital Membership Card is ${isActive ? 'Active' : 'Inactive'}. Now, you are eligible to get all the membership benefits of Extratech Oval International Cricket Stadium',
+//                 style: GoogleFonts.poppins(
+//                   fontSize: subtitleSize,
+//                   color: Colors.black87,
+//                 ),
+//               ),
+//             ),
+//             Container(
+//               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+//               decoration: BoxDecoration(
+//                 color: isActive ? Colors.green.shade100 : Colors.red.shade100,
+//                 borderRadius: BorderRadius.circular(16),
+//               ),
+//               child: Text(
+//                 isActive ? 'Active' : 'Inactive',
+//                 style: GoogleFonts.poppins(
+//                   fontSize: subtitleSize,
+//                   fontWeight: FontWeight.w600,
+//                   color: isActive ? Colors.green.shade800 : Colors.red.shade800,
+//                 ),
+//               ),
+//             ),
+//           ],
+//         ),
+        
+//         const SizedBox(height: 16),
+        
+//         // Membership Card
+//         RepaintBoundary(
+//           key: _cardKey,
+//           child: Card(
+//             elevation: 8.0,
+//             margin: const EdgeInsets.symmetric(vertical: 12),
+//             shape: RoundedRectangleBorder(
+//               borderRadius: BorderRadius.circular(16.0),
+//             ),
+//             clipBehavior: Clip.antiAlias,
+//             child: Column(
+//               mainAxisSize: MainAxisSize.min,
+//               children: [
+//                 // Main card body with FIXED gradient background matching CSS exactly
+//                 Container(
+//                   decoration: BoxDecoration(
+//                     // FIXED: Gradient now matches CSS linear-gradient(157deg, ...)
+//                     gradient: LinearGradient(
+//                       transform: GradientRotation(157 * 3.14159 / 180), // Convert 157deg to radians
+//                       begin: Alignment.bottomLeft,
+//                       end: Alignment.topLeft,
+                     
+                      
+//                       stops: const [0.0, 0.37, 1.0], // Exact stops from CSS
+//                       colors: [
+//                         primaryBlue,    // rgb(39 94 174) at 0%
+//                         secondaryBlue,  // rgb(47 100 170) at 37%
+//                         pinkColor,      // rgba(220, 47, 160, 1) at 100%
+//                       ],
+//                     ),
+//                   ),
+//                   padding: const EdgeInsets.all(16),
+//                   child: Stack(
+//                     children: [
+//                       // FIXED: OVAL watermark - MUCH LARGER SIZE
+//                       if (logoImageBytes != null)
+//                         Positioned(
+//                           left: -30,    // Extended further left
+//                           right: 100,   // Reduced right margin for more space
+//                           top: -20,     // Extended up
+//                           bottom: -40,  // Extended down
+//                           child: Opacity(
+//                             opacity: 0.6, // Slightly more visible
+//                             child: Center(
+//                               child: Transform.scale(
+//                                 scale: 0.8, // MUCH larger watermark (increased from default)
+//                                 child: Image.memory(
+//                                   logoImageBytes,
+//                                   fit: BoxFit.contain,
+//                                   color: Colors.white.withOpacity(0.2),
+//                                   colorBlendMode: BlendMode.srcATop,
+//                                 ),
+//                               ),
+//                             ),
+//                           ),
+//                         ),
+                      
+//                       // Card content
+//                       Column(
+//                         children: [
+//                           // TOP SECTION - Header with photo, name, email, member type
+//                           _buildHeaderSection(
+//                             membershipTypeName, 
+//                             memberIconBytes, 
+//                             emailIconBytes,
+//                             isDownloading,
+//                           ),
+                          
+//                           const SizedBox(height: 16),
+                          
+//                           // BOTTOM SECTION - Details and QR code
+//                           Row(
+//                             crossAxisAlignment: CrossAxisAlignment.start,
+//                             children: [
+//                               // Left column - Details section
+//                               Expanded(
+//                                 flex: 62,
+//                                 child: _buildDetailsSection(),
+//                               ),
+                              
+//                               const SizedBox(width: 16),
+                              
+//                               // Right column - QR code section
+//                               Expanded(
+//                                 flex: 38,
+//                                 child: AspectRatio(
+//                                   aspectRatio: 1.0,
+//                                   child: Container(
+//                                     decoration: BoxDecoration(
+//                                       color: Colors.white,
+//                                       borderRadius: BorderRadius.circular(4),
+//                                       boxShadow: [
+//                                         BoxShadow(
+//                                           color: Colors.black.withOpacity(0.2),
+//                                           blurRadius: 4,
+//                                           offset: const Offset(0, 2),
+//                                         ),
+//                                       ],
+//                                     ),
+//                                     padding: const EdgeInsets.all(2),
+//                                     child: svgContent != null
+//                                       ? SvgPicture.string(
+//                                           svgContent,
+//                                           fit: BoxFit.contain,
+//                                         )
+//                                       : const Center(
+//                                           child: Icon(
+//                                             Icons.qr_code,
+//                                             color: Colors.grey,
+//                                             size: 50,
+//                                           ),
+//                                         ),
+//                                   ),
+//                                 ),
+//                               ),
+//                             ],
+//                           ),
+//                         ],
+//                       ),
+//                     ],
+//                   ),
+//                 ),
+                
+//                 // Pink footer with slogan
+//                 Container(
+//                   width: double.infinity,
+//                   color: pinkBackground,
+//                   padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+//                   child: Text(
+//                     '"मेरो लगानी सिप सिक्न मात्र होइन, स्टेडियम बनाउन पनि!"',
+//                     style: GoogleFonts.poppins(
+//                       fontSize: 12,
+//                       fontWeight: FontWeight.w600,
+//                       color: sloganTextColor,
+//                       height: 1.4,
+//                       letterSpacing: 0.3,
+//                     ),
+//                     textAlign: TextAlign.center,
+//                   ),
+//                 ),
+//               ],
+//             ),
+//           ),
+//         ),
+//       ],
+//     );
+    
+//     // Only apply fade transition if animation controller is initialized
+//     if (_animationController != null && _fadeAnimation != null) {
+//       return FadeTransition(
+//         opacity: _fadeAnimation!,
+//         child: content,
+//       );
+//     }
+    
+//     return content;
+//   }
+  
+//   Widget _buildPendingApplicationView() {
+//     return Card(
+//       elevation: 8.0,
+//       margin: const EdgeInsets.symmetric(vertical: 20),
+//       shape: RoundedRectangleBorder(
+//         borderRadius: BorderRadius.circular(16.0),
+//       ),
+//       child: Container(
+//         decoration: BoxDecoration(
+//           // FIXED: Use the same corrected gradient for consistency
+//           gradient: LinearGradient(
+//             transform: GradientRotation(157 * 3.14159 / 180),
+//             begin: Alignment.bottomLeft,
+//             end: Alignment.topLeft,
+//             stops: const [0.0, 0.37, 1.0],
+//             colors: [
+//               primaryBlue,
+//               secondaryBlue,
+//               pinkColor,
+//             ],
+//           ),
+//           borderRadius: BorderRadius.circular(16.0),
+//         ),
+//         padding: const EdgeInsets.all(20),
+//         child: Column(
+//           mainAxisSize: MainAxisSize.min,
+//           mainAxisAlignment: MainAxisAlignment.center,
+//           children: [
+//             Container(
+//               decoration: BoxDecoration(
+//                 color: Colors.white.withOpacity(0.2),
+//                 shape: BoxShape.circle,
+//               ),
+//               padding: const EdgeInsets.all(20),
+//               child: const Icon(
+//                 Icons.check_circle_outline,
+//                 color: Colors.white,
+//                 size: 50,
+//               ),
+//             ),
+//             const SizedBox(height: 20),
+//             Text(
+//               'Application Submitted',
+//               style: GoogleFonts.poppins(
+//                 fontSize: 20,
+//                 fontWeight: FontWeight.bold,
+//                 color: Colors.white,
+//               ),
+//               textAlign: TextAlign.center,
+//             ),
+//             const SizedBox(height: 12),
+//             Text(
+//               'Your membership card application has been submitted successfully and is awaiting approval.',
+//               style: GoogleFonts.poppins(
+//                 fontSize: 14,
+//                 color: Colors.white.withOpacity(0.9),
+//               ),
+//               textAlign: TextAlign.center,
+//             ),
+//             const SizedBox(height: 24),
+//             Container(
+//               padding: const EdgeInsets.all(16),
+//               decoration: BoxDecoration(
+//                 color: Colors.white.withOpacity(0.15),
+//                 borderRadius: BorderRadius.circular(12),
+//                 border: Border.all(color: Colors.white.withOpacity(0.3)),
+//               ),
+//               child: Row(
+//                 children: [
+//                   Container(
+//                     decoration: BoxDecoration(
+//                       color: Colors.white.withOpacity(0.3),
+//                       shape: BoxShape.circle,
+//                     ),
+//                     padding: const EdgeInsets.all(8),
+//                     child: const Icon(
+//                       Icons.access_time,
+//                       color: Colors.white,
+//                       size: 20,
+//                     ),
+//                   ),
+//                   const SizedBox(width: 12),
+//                   Expanded(
+//                     child: Column(
+//                       crossAxisAlignment: CrossAxisAlignment.start,
+//                       children: [
+//                         Text(
+//                           'Application Status',
+//                           style: GoogleFonts.poppins(
+//                             fontWeight: FontWeight.bold,
+//                             fontSize: 16,
+//                             color: Colors.white,
+//                             height: 1.4,
+//                             letterSpacing: 0.3,
+//                           ),
+//                         ),
+//                         const SizedBox(height: 4),
+//                         Text(
+//                           'Under Review',
+//                           style: GoogleFonts.poppins(
+//                             color: Colors.white.withOpacity(0.9),
+//                             fontSize: 14,
+//                             height: 1.4,
+//                             letterSpacing: 0.3,
+//                           ),
+//                         ),
+//                       ],
+//                     ),
+//                   ),
+//                 ],
+//               ),
+//             ),
+//             const SizedBox(height: 20),
+//             if (widget.cardData['qr_code_no'] != null)
+//               Container(
+//                 padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+//                 decoration: BoxDecoration(
+//                   color: Colors.white.withOpacity(0.1),
+//                   borderRadius: BorderRadius.circular(8),
+//                 ),
+//                 child: Row(
+//                   mainAxisAlignment: MainAxisAlignment.center,
+//                   mainAxisSize: MainAxisSize.min,
+//                   children: [
+//                     const Icon(
+//                       Icons.confirmation_number_outlined,
+//                       size: 16,
+//                       color: Colors.white,
+//                     ),
+//                     const SizedBox(width: 8),
+//                     Text(
+//                       'Reference: ${widget.cardData['qr_code_no']}',
+//                       style: GoogleFonts.poppins(
+//                         fontSize: 14,
+//                         color: Colors.white,
+//                         height: 1.4,
+//                         letterSpacing: 0.3,
+//                       ),
+//                     ),
+//                   ],
+//                 ),
+//               ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+  
+//   Widget _buildHeaderSection(
+//     String? membershipTypeName,
+//     Uint8List? memberIconBytes,
+//     Uint8List? emailIconBytes,
+//     bool isDownloading,
+//   ) {
+//     return Row(
+//       crossAxisAlignment: CrossAxisAlignment.start,
+//       children: [
+//         // Profile photo with enhanced white border
+//         Container(
+//           decoration: BoxDecoration(
+//             shape: BoxShape.circle,
+//             border: Border.all(color: Colors.white, width: 3), // Increased width for more prominent border
+//             boxShadow: [
+//               BoxShadow(
+//                 color: Colors.black.withOpacity(0.2),
+//                 blurRadius: 4,
+//                 offset: const Offset(0, 2),
+//               ),
+//             ],
+//           ),
+//           child: CircleAvatar(
+//             radius: 36,
+//             backgroundColor: Colors.white,
+//             child: CircleAvatar(
+//               radius: 33, // Reduced to account for thicker border
+//               backgroundImage: widget.cardData['photo_url'] != null
+//                 ? NetworkImage(widget.cardData['photo_url'])
+//                 : null,
+//               backgroundColor: Colors.grey[200],
+//               child: widget.cardData['photo_url'] == null
+//                 ? const Icon(Icons.person, size: 36, color: Colors.grey)
+//                 : null,
+//             ),
+//           ),
+//         ),
+        
+//         const SizedBox(width: 12),
+        
+//         // Name, email, member info
+//         Expanded(
+//           child: Column(
+//             crossAxisAlignment: CrossAxisAlignment.start,
+//             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//             children: [
+//               // Name and download button
+//               Row(
+//                 crossAxisAlignment: CrossAxisAlignment.center,
+//                 children: [
+//                   Expanded(
+//                     child: Text(
+//                       widget.cardData['name'] ?? 'Member Name',
+//                       style: GoogleFonts.poppins(
+//                         fontSize: 18,
+//                         fontWeight: FontWeight.bold,
+//                         color: textColor,
+//                         height: 1.4,
+//                       ),
+//                       maxLines: 1,
+//                       overflow: TextOverflow.ellipsis,
+//                     ),
+//                   ),
+//                   GestureDetector(
+//                     onTap: isDownloading ? null : _downloadCard,
+//                     child: isDownloading
+//                       ? const SizedBox(
+//                           width: 20,
+//                           height: 20,
+//                           child: CircularProgressIndicator(
+//                             strokeWidth: 2,
+//                             valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+//                           ),
+//                         )
+//                       : const Icon(
+//                           Icons.file_download_outlined,
+//                           color: Colors.white,
+//                           size: 20,
+//                         ),
+//                   ),
+//                 ],
+//               ),
+              
+//               const SizedBox(height: 4),
+              
+//               // Email
+//               Row(
+//                 children: [
+//                   emailIconBytes != null
+//                     ? Image.memory(
+//                         emailIconBytes,
+//                         width: 14,
+//                         height: 14,
+//                         color: Colors.white,
+//                       )
+//                     : const Icon(
+//                         Icons.email_outlined, 
+//                         color: Colors.white, 
+//                         size: 14
+//                       ),
+//                   const SizedBox(width: 4),
+//                   Expanded(
+//                     child: Text(
+//                       widget.cardData['email'] ?? 'email@example.com',
+//                       style: GoogleFonts.poppins(
+//                         fontSize: 11,
+//                         color: Colors.white,
+//                         height: 1.4,
+//                       ),
+//                       maxLines: 1,
+//                       overflow: TextOverflow.ellipsis,
+//                     ),
+//                   ),
+//                 ],
+//               ),
+              
+//               const SizedBox(height: 4),
+              
+//               // Member type - without Active badge
+//               Row(
+//                 crossAxisAlignment: CrossAxisAlignment.center,
+//                 children: [
+//                   memberIconBytes != null
+//                     ? Image.memory(
+//                         memberIconBytes,
+//                         width: 14,
+//                         height: 14,
+//                         color: Colors.white,
+//                       )
+//                     : const Icon(
+//                         Icons.person_outline, 
+//                         color: Colors.white, 
+//                         size: 14
+//                       ),
+//                   const SizedBox(width: 4),
+//                   Text(
+//                     membershipTypeName ?? 'Member',
+//                     style: GoogleFonts.poppins(
+//                       fontSize: 11,
+//                       color: Colors.white,
+//                       height: 1.4,
+//                     ),
+//                     maxLines: 1,
+//                     overflow: TextOverflow.ellipsis,
+//                   ),
+//                 ],
+//               ),
+//             ],
+//           ),
+//         ),
+//       ],
+//     );
+//   }
+
+//   Widget _buildDetailsSection() {
+//     // Use consistent font sizes with more spacing between labels and values
+//     const double labelSize = 12.0; 
+//     const double valueSize = 12.0;
+    
+//     return Column(
+//       crossAxisAlignment: CrossAxisAlignment.start,
+//       children: [
+//         _buildDetailRow('ID:', widget.cardData['qr_code_no']?.toString() ?? '', labelSize, valueSize),
+//         const SizedBox(height: 8),
+//         _buildDetailRow('Issued On:', _formatDate(widget.cardData['start_date']), labelSize, valueSize),
+//         const SizedBox(height: 8),
+//         _buildDetailRow('Expires:', _formatExpiryDate(), labelSize, valueSize),
+//         const SizedBox(height: 8),
+//         _buildAddressRow('Address:', widget.cardData['address'] ?? 'Not specified', labelSize, valueSize),
+//       ],
+//     );
+//   }
+  
+//   Widget _buildDetailRow(String label, String value, double labelSize, double valueSize) {
+//     return Row(
+//       crossAxisAlignment: CrossAxisAlignment.center,
+//       children: [
+//         SizedBox(
+//           width: 70,
+//           child: Text(
+//             label,
+//             style: GoogleFonts.poppins(
+//               fontSize: labelSize,
+//               fontWeight: FontWeight.bold,
+//               color: Colors.white,
+//               height: 1.4,
+//             ),
+//           ),
+//         ),
+        
+//         Expanded(
+//           child: Text(
+//             value,
+//             style: GoogleFonts.poppins(
+//               fontSize: valueSize,
+//               color: Colors.white,
+//               height: 1.4,
+//             ),
+//             maxLines: 1,
+//             overflow: TextOverflow.ellipsis,
+//           ),
+//         ),
+//       ],
+//     );
+//   }
+  
+//   Widget _buildAddressRow(String label, String value, double labelSize, double valueSize) {
+//     return Row(
+//       crossAxisAlignment: CrossAxisAlignment.start,
+//       children: [
+//         SizedBox(
+//           width: 70,
+//           child: Text(
+//             label,
+//             style: GoogleFonts.poppins(
+//               fontSize: labelSize,
+//               fontWeight: FontWeight.bold,
+//               color: Colors.white,
+//               height: 1.4,
+//             ),
+//           ),
+//         ),
+        
+//         Expanded(
+//           child: Text(
+//             value,
+//             style: GoogleFonts.poppins(
+//               fontSize: valueSize,
+//               color: Colors.white,
+//               height: 1.2,
+//             ),
+//             softWrap: true,
+//             maxLines: 2,
+//             overflow: TextOverflow.clip,
+//           ),
+//         ),
+//       ],
+//     );
+//   }
+  
+//   String _formatExpiryDate() {
+//     if (widget.cardData['is_lifetime'] == 1) {
+//       return 'Lifetime';
+//     }
+//     return _formatDate(widget.cardData['expiry_date']);
+//   }
+  
+//   String _formatDate(String? dateString) {
+//     if (dateString == null) return 'Not specified';
+    
+//     try {
+//       final date = DateTime.parse(dateString);
+//       final day = date.day.toString().padLeft(2, '0');
+//       final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+//       final month = months[date.month - 1];
+//       final year = date.year;
+      
+//       return '$day $month $year';
+//     } catch (e) {
+//       return dateString;
+//     }
+//   }
+// }
 
 
 

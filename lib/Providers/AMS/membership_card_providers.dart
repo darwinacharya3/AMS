@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:ems/services/membership_card_services.dart';
+import 'package:ems/services/AMS/membership_card_services.dart';
 
 /// Provider that fetches and holds the raw membership data
 final membershipDataProvider = FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
